@@ -1,5 +1,3 @@
-# Turkish Extended NER – Annotation Statistics & Analysis
-
 # Turkish Extended NER — Annotation Statistics & Analysis
 
 This repository provides tools to compute corpus-level statistics, run quality control, and generate visualizations for the Turkish Extended Named Entity Recognition (NER) project. It analyzes INCEpTION/CoNLL annotations to prepare data for downstream tasks such as character-level boundary detection and contrastive learning experiments.
