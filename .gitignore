@@ -1,0 +1,23 @@
+# Virtual environment
+.venv/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Results and outputs
+results/
+results_module_check/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (optional): uncomment if you don't want to push large annotation data
+# data/annotation/

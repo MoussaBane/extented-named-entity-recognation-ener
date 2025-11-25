@@ -1,0 +1,12 @@
+{
+  "total_document_folders": 130,
+  "annotated_documents": 34,
+  "unannotated_documents": 96,
+  "total_sentences": 1142,
+  "sentences_with_entity": 980,
+  "entity_sentence_ratio": 0.8581436077057794,
+  "total_tokens": 29195,
+  "num_entity_labels_bio": 161,
+  "num_entity_types": 97,
+  "average_sentence_length": 25.564798598949213
+}
