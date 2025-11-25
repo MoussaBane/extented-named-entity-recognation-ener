@@ -1,130 +1,135 @@
- # Turkish Extended NER — Annotation Statistics
+# Turkish Extended NER – Annotation Statistics & Analysis
 
-This repository provides reproducible corpus-level statistics and visualizations for
-an extended Named Entity Recognition (NER) annotation collection in Turkish. The
-primary intent is dataset quality inspection and preparation of downstream tasks
-such as character-level boundary detection and contrastive learning experiments.
+# Turkish Extended NER — Annotation Statistics & Analysis
 
-Note: The original README has been preserved unchanged as `README.ORIGINAL.md`.
-If you prefer the original layout or content, see that file.
+This repository provides tools to compute corpus-level statistics, run quality control, and generate visualizations for the Turkish Extended Named Entity Recognition (NER) project. It analyzes INCEpTION/CoNLL annotations to prepare data for downstream tasks such as character-level boundary detection and contrastive learning experiments.
 
-Supported features:
+## Key Features
 
-- Parsing INCEpTION/CoNLL-style annotations under `data/annotation/`.
-- Computing corpus statistics (tokens, sentences, entity counts, label distributions).
-- Tagset quality checks comparing `data/ENER-tagset.tsv` with annotations.
-- Exporting numerical summaries (`stats.json`, CSVs) and generating plots (`results/plots/`).
+- CoNLL parsing: Read INCEpTION/CoNLL-style annotations from document folders.  
+- Corpus statistics: Compute token/sentence counts, entity density, label and type distributions.  
+- Tagset QC: Validate annotations against `data/ENER-tagset.tsv` and report unused or undefined tags.  
+- Visualization: Produce plots for entity frequency, sentence ratios, and length distributions.  
+- Export: Save summaries as JSON and CSV for reporting and further analysis.
 
-Repository layout (relevant files)
+## Repository Layout
 
-- `data/annotation/` — input: document subfolders containing `.conll` annotation files.
-- `data/ENER-tagset.tsv` — canonical tagset used for QC.
-- `ner_stats/` — library code: `conll_reader.py`, `statistics.py`, `tagset.py`.
-- `scripts/run_analysis.py` — CLI entrypoint for the analysis pipeline.
-- `results/` — output directory for JSON, CSVs, and generated plots.
-- `requirements.txt` — Python dependencies.
+```
+turkish-extended-ner-stats/
+│
+├── data/
+│   ├── annotation/           # Input: document subfolders with .conll files
+│   └── ENER-tagset.tsv       # Canonical tagset for QC
+│
+├── ner_stats/                # Library code
+│   ├── conll_reader.py       # CoNLL parsing
+│   ├── statistics.py         # Metric computation
+│   └── tagset.py             # Tagset validation
+│
+├── scripts/
+│   └── run_analysis.py       # CLI entrypoint
+│
+├── results/                  # Auto-created output directory
+│   ├── plots/                # Generated visualizations
+│   ├── stats.json            # Global statistics
+│   └── *.csv                 # Detailed reports
+│
+└── requirements.txt
+```
+
+## Getting Started
 
 Prerequisites
 
-- Python 3.8 or newer (3.10+ recommended).
-- Git (optional) to clone the repository.
+- Python 3.8+ (3.10 recommended)
+- Git
 
-Installation (recommended)
+Install
 
-Windows — PowerShell (copy/paste):
+1. Clone the repo and create a virtual environment:
 
-```powershell
-# from project root
-python -m venv .venv
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass; .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-macOS / Linux:
+Linux / macOS
 
 ```bash
+git clone https://github.com/<your-username>/turkish-extended-ner-stats.git
+cd turkish-extended-ner-stats
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Running the analysis
-
-Option 1 — call the venv Python directly (no activation required):
+Windows (PowerShell)
 
 ```powershell
-& "C:\full\path\to\project\\.venv\Scripts\python.exe" scripts/run_analysis.py --data-root data/annotation --results-dir results
+git clone https://github.com/<your-username>/turkish-extended-ner-stats.git
+cd turkish-extended-ner-stats
+python -m venv .venv
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 ```
 
-Option 2 — module invocation (recommended):
+## Usage
 
-```powershell
-$env:PYTHONPATH = "C:\full\path\to\project"
-& "C:\full\path\to\project\.venv\Scripts\python.exe" -m scripts.run_analysis --data-root data/annotation --results-dir results
-```
-
-Or on macOS / Linux:
+Basic
 
 ```bash
-export PYTHONPATH="/full/path/to/project"
-/full/path/to/project/.venv/bin/python -m scripts.run_analysis --data-root data/annotation --results-dir results
+python scripts/run_analysis.py --data-root data/annotation --results-dir results
 ```
 
-Notes on Windows paths
+Run as a module (avoids PYTHONPATH issues)
 
-- PowerShell treats space-separated tokens as separate commands. Use the call operator
-  `&` and quote full paths containing spaces.
-- If activation is blocked by policy, the `Set-ExecutionPolicy` line above sets a
-  temporary process-level bypass.
+Linux / macOS
 
-Expected outputs
-
-- `results/stats.json` — corpus statistics (JSON).
-- `results/label_counts.csv` — per-label counts.
-- `results/type_counts.csv` — aggregated type counts.
-- `results/plots/` — PNG files with common visualizations.
-- `results/unused_tags_in_corpus.txt` and `results/unknown_types_in_tagset_comparison.txt` — tagset QC reports.
-
-Example run (what to expect)
-
-After a successful run you should see console messages similar to:
-
-```
-[INFO] Results will be saved under: results
-[INFO] Saved stats.json, label_counts.csv, and type_counts.csv
-[INFO] Plots generated in results\plots
+```bash
+export PYTHONPATH="$PWD"
+python -m scripts.run_analysis --data-root data/annotation --results-dir results
 ```
 
-Development notes
+Windows (PowerShell)
 
-- `ner_stats/__init__.py` and `scripts/__init__.py` are present to allow module
-  invocation with `python -m scripts.run_analysis`.
-- If you reorganize the project, either update `PYTHONPATH` or install the package
-  in editable mode (`pip install -e .`) with a `pyproject.toml` / `setup.py`.
+```powershell
+$env:PYTHONPATH = "C:\path\to\turkish-extended-ner-stats"
+python -m scripts.run_analysis --data-root data/annotation --results-dir results
+```
 
-Troubleshooting
+## Outputs
 
-- Module import errors: ensure you run from the project root or set `PYTHONPATH`.
-- Activation errors on PowerShell: use the `Set-ExecutionPolicy -Scope Process` command
-  shown above to temporarily allow activation.
-- If `pip install -r requirements.txt` fails, verify your network and Python version.
+After a successful run, the `results/` directory contains:
 
-Contributing
+- stats.json — corpus-level summary (tokens, docs, entity/sentence ratios, distinct types)  
+- label_counts.csv — BIO label counts  
+- type_counts.csv — aggregated counts by entity type (e.g., PERSON, DATE)  
+- plots/ — visualizations such as top20_entity_types.png, entity_sentence_ratio.png, sentence_length_hist.png  
+- QC reports: `unused_tags_in_corpus.txt`, `unknown_types_in_tagset_comparison.txt`
 
-Contributions are welcome. Suggested tasks:
+## ENER Tagset
 
-- Add unit tests for parsing and statistics functions.
-- Add CI to validate a minimal analysis run on a small fixture dataset.
-- Provide convenience entry scripts: `run_analysis.ps1` and `run_analysis.sh`.
+The project uses a custom extended tagset defined in `data/ENER-tagset.tsv`, covering 130+ entity types grouped into families such as:
 
-If you open a pull request, include a short description, tests or a reproducible
-example, and the platform(s) you tested on.
+- Locations: LOC_CITY, LOC_COUNTRY, LOC_GEO, LOC_ASTRAL, LOC_ADDRESS  
+- Facilities: FAC_AIRPORT, FAC_MUSEUM, FAC_SCHOOL, FAC_RELIGIOUS, FAC_ZOO  
+- Organizations: ORG_CORPORATION, ORG_POLITICAL, ORG_SPORTS, ORG_TERROR  
+- Professional/Conceptual: PRO_LANGUAGE, PRO_THEORY, PRO_MONEY, PRO_ART, PRO_LAW  
+- Temporal/Numeric: DATE, TIME, DURATION, CALORIE, TEMPERATURE, DISTANCE  
+- Semantic categories: ANIMAL, PLANT, DISEASE, EVENT, MOVIE, BOOK, SPACE
 
-License & contact
+## Scientific Goals
 
-This repository does not include a license file — add one if you intend to publish.
-Open an issue for questions or to request features.
+Primary research goals enabled by this toolkit:
 
----
+- Character-level boundary detection: convert token-level BIO annotations to exact character offsets and create a binary character-level entity classification task.  
+- Contrastive learning & augmentation: mine positive/negative sentence or span pairs and leverage entity-rich sentences and label-rich types to build robust dense representations.
 
-(Rewritten README: detailed, professional instructions for users and developers.)
+## Contributing
+
+Contributions are welcome:
+
+1. Fork the repository.  
+2. Create a feature branch: git checkout -b feature/YourFeature  
+3. Commit changes and open a Pull Request.
+
+## License & Contact
+
+- License: add an appropriate license file (e.g., MIT, Apache 2.0).  
+- Contact: open an issue for questions about the BAP project or dataset access.
