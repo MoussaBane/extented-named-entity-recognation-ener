@@ -13,7 +13,7 @@ This repository provides tools to compute corpus-level statistics, run quality c
 ## Repository Layout
 
 ```
-turkish-extended-ner-stats/
+extented-named-entity-recognation-ener/
 │
 ├── data/
 │   ├── annotation/           # Input: document subfolders with .conll files
@@ -49,8 +49,8 @@ Install
 Linux / macOS
 
 ```bash
-git clone https://github.com/<your-username>/turkish-extended-ner-stats.git
-cd turkish-extended-ner-stats
+git clone https://github.com/MoussaBane/extented-named-entity-recognation-ener.git
+cd extented-named-entity-recognation-ener
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -59,8 +59,8 @@ pip install -r requirements.txt
 Windows (PowerShell)
 
 ```powershell
-git clone https://github.com/<your-username>/turkish-extended-ner-stats.git
-cd turkish-extended-ner-stats
+git clone https://github.com/MoussaBane/extented-named-entity-recognation-ener.git
+cd extented-named-entity-recognation-ener
 python -m venv .venv
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\.venv\Scripts\Activate.ps1
@@ -87,7 +87,7 @@ python -m scripts.run_analysis --data-root data/annotation --results-dir results
 Windows (PowerShell)
 
 ```powershell
-$env:PYTHONPATH = "C:\path\to\turkish-extended-ner-stats"
+$env:PYTHONPATH = "C:\path\to\extented-named-entity-recognation-ener"
 python -m scripts.run_analysis --data-root data/annotation --results-dir results
 ```
 
