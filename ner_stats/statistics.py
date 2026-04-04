@@ -6,7 +6,7 @@ import json
 import os
 from collections import Counter
 from dataclasses import dataclass, asdict
-from typing import Dict, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -39,6 +39,60 @@ def iter_document_dirs(annotation_root: str) -> List[str]:
         if os.path.isdir(full):
             dirs.append(full)
     return sorted(dirs)
+
+
+def count_conll_sentence_statistics(sentences: Iterable[Sentence]) -> Dict[str, int]:
+    """
+    Count basic corpus statistics from already-parsed CoNLL sentences.
+
+    Returns a dictionary with the total number of sentences, tokens, and
+    non-"O" entity annotations.
+    """
+    total_sentences = 0
+    total_tokens = 0
+    num_entities = 0
+
+    for sentence in sentences:
+        total_sentences += 1
+        total_tokens += len(sentence)
+
+        for _, label in sentence:
+            if label != "O":
+                num_entities += 1
+
+    return {
+        "total_sentences": total_sentences,
+        "total_tokens": total_tokens,
+        "num_entities": num_entities,
+    }
+
+
+def count_sentences_per_entity_type(sentences: Iterable[Sentence]) -> Dict[str, int]:
+    """
+    Count how many sentences contain each entity type (without BIO prefix).
+
+    Each sentence contributes at most 1 count per entity type.
+    """
+    sentence_type_counter: Counter = Counter()
+
+    for sentence in sentences:
+        types_in_sentence = set()
+
+        for _, label in sentence:
+            if label == "O":
+                continue
+
+            entity_type = label
+            if entity_type.startswith("B-") or entity_type.startswith("I-"):
+                entity_type = entity_type[2:]
+
+            if entity_type:
+                types_in_sentence.add(entity_type)
+
+        for entity_type in types_in_sentence:
+            sentence_type_counter[entity_type] += 1
+
+    return dict(sentence_type_counter)
 
 
 def compute_corpus_statistics(annotation_root: str) -> Tuple[CorpusStats, Counter, Counter]:
