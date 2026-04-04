@@ -12,7 +12,7 @@ This repository provides tools to compute corpus-level statistics, run quality c
 
 ## Repository Layout
 
-```
+```text
 extented-named-entity-recognation-ener/
 │
 ├── data/
@@ -75,6 +75,24 @@ Basic
 python scripts/run_analysis.py --data-root data/annotation --results-dir results
 ```
 
+End-to-end ENER experiment (BERT + CVA + comparison)
+
+```bash
+python scripts/train_ner.py \
+ --train-file data/_smoke_train.conll \
+ --eval-file data/_smoke_eval.conll \
+ --output-dir outputs/bert-ner-smoke \
+ --results-dir results/model_comparison_smoke
+```
+
+This single command runs:
+
+- BIO validation and label-map creation
+- BERT token-classification training/evaluation
+- CVA vector computation from aligned token embeddings
+- CVA classification on eval data
+- Confusion matrices, macro/per-class precision-recall-F1, and timing comparison
+
 Run as a module (avoids PYTHONPATH issues)
 
 Linux / macOS
@@ -100,6 +118,14 @@ After a successful run, the `results/` directory contains:
 - type_counts.csv — aggregated counts by entity type (e.g., PERSON, DATE)  
 - plots/ — visualizations such as top20_entity_types.png, entity_sentence_ratio.png, sentence_length_hist.png  
 - QC reports: `unused_tags_in_corpus.txt`, `unknown_types_in_tagset_comparison.txt`
+
+For `scripts/train_ner.py`, `results/model_comparison_*` includes:
+
+- `metrics_bert_with_o.json`, `metrics_bert_without_o.json`
+- `metrics_cva_with_o.json`, `metrics_cva_without_o.json`
+- `confusion_matrix_bert_with_o.csv`, `confusion_matrix_cva_with_o.csv`
+- `comparison_summary.json`
+- `bio_validation_warnings.txt`
 
 ## ENER Tagset
 

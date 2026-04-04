@@ -1,6 +1,6 @@
 """Evaluation utilities for token classification labels."""
 
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Sequence
 
 import numpy as np
 
@@ -24,6 +24,7 @@ def evaluate_token_classification(
     predicted_labels: Sequence[Sequence[str]] | Sequence[str],
     label_order: Sequence[str] | None = None,
     ignore_labels: Sequence[str] | None = None,
+    include_o_label: bool = True,
 ) -> Dict[str, object]:
     """
     Compare predicted labels with true labels and compute token-level metrics.
@@ -33,6 +34,7 @@ def evaluate_token_classification(
         predicted_labels: Predicted labels with the same structure as true_labels.
         label_order: Optional explicit class order for the confusion matrix.
         ignore_labels: Optional labels to exclude from evaluation.
+        include_o_label: Whether to keep the "O" class in metrics.
 
     Returns:
         Dictionary with confusion_matrix, labels, precision, recall, and f1.
@@ -44,6 +46,8 @@ def evaluate_token_classification(
         raise ValueError("true_labels and predicted_labels must contain the same number of sequences.")
 
     ignore_set = set(ignore_labels or [])
+    if not include_o_label:
+        ignore_set.add("O")
 
     flattened_true: List[str] = []
     flattened_pred: List[str] = []
@@ -72,26 +76,51 @@ def evaluate_token_classification(
             continue
         confusion_matrix[label_to_index[true_label], label_to_index[predicted_label]] += 1
 
-    true_positive = int(np.trace(confusion_matrix))
-    false_positive = int(confusion_matrix.sum(axis=0).sum() - true_positive)
-    false_negative = int(confusion_matrix.sum(axis=1).sum() - true_positive)
+    per_class: Dict[str, Dict[str, float | int]] = {}
+    macro_precision = 0.0
+    macro_recall = 0.0
+    macro_f1 = 0.0
 
-    precision_denominator = true_positive + false_positive
-    recall_denominator = true_positive + false_negative
+    for idx, label in enumerate(labels):
+        tp = int(confusion_matrix[idx, idx])
+        fp = int(confusion_matrix[:, idx].sum() - tp)
+        fn = int(confusion_matrix[idx, :].sum() - tp)
+        support = int(confusion_matrix[idx, :].sum())
 
-    precision = true_positive / precision_denominator if precision_denominator > 0 else 0.0
-    recall = true_positive / recall_denominator if recall_denominator > 0 else 0.0
-    f1 = (
-        2.0 * precision * recall / (precision + recall)
-        if (precision + recall) > 0.0
-        else 0.0
-    )
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        f1 = (2.0 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
+
+        per_class[label] = {
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "support": support,
+        }
+
+        macro_precision += precision
+        macro_recall += recall
+        macro_f1 += f1
+
+    num_classes = len(labels)
+    if num_classes > 0:
+        macro_precision /= num_classes
+        macro_recall /= num_classes
+        macro_f1 /= num_classes
+
+    total = int(confusion_matrix.sum())
+    accuracy = float(np.trace(confusion_matrix) / total) if total > 0 else 0.0
 
     return {
         "labels": labels,
         "confusion_matrix": confusion_matrix,
-        "precision": precision,
-        "recall": recall,
-        "f1": f1,
+        "per_class": per_class,
+        "precision": macro_precision,
+        "recall": macro_recall,
+        "f1": macro_f1,
+        "macro_precision": macro_precision,
+        "macro_recall": macro_recall,
+        "macro_f1": macro_f1,
+        "accuracy": accuracy,
         "support": len(flattened_true),
     }

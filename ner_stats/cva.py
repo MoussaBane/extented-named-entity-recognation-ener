@@ -1,6 +1,6 @@
 """Class-vector utilities: mean vectors and Common Vector Approach (CVA)."""
 
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Mapping, Sequence, Tuple
 
 import numpy as np
 
@@ -23,7 +23,7 @@ def _to_2d_array(vectors: Sequence[Sequence[float]] | np.ndarray) -> np.ndarray:
 
 
 def compute_class_mean_vectors(
-    embeddings_by_class: Dict[str, Sequence[Sequence[float]] | np.ndarray]
+    embeddings_by_class: Mapping[str, Sequence[Sequence[float]] | np.ndarray]
 ) -> Dict[str, np.ndarray]:
     """
     Compute mean embedding vector for each class.
@@ -45,7 +45,7 @@ def compute_class_mean_vectors(
 
 
 def compute_cva_common_vectors(
-    embeddings_by_class: Dict[str, Sequence[Sequence[float]] | np.ndarray],
+    embeddings_by_class: Mapping[str, Sequence[Sequence[float]] | np.ndarray],
     svd_tol: float = 1e-10,
 ) -> Dict[str, np.ndarray]:
     """
@@ -92,7 +92,7 @@ def compute_cva_common_vectors(
 
 def classify_embedding_by_cosine_similarity(
     embedding: Sequence[float] | np.ndarray,
-    class_vectors: Dict[str, Sequence[float] | np.ndarray],
+    class_vectors: Mapping[str, Sequence[float] | np.ndarray],
 ) -> str:
     """
     Classify a word embedding by cosine similarity against class vectors.
@@ -141,7 +141,7 @@ def classify_embedding_by_cosine_similarity(
 
 def classify_sentence_tokens_by_cosine_similarity(
     sentence: str,
-    class_vectors: Dict[str, Sequence[float] | np.ndarray],
+    class_vectors: Mapping[str, Sequence[float] | np.ndarray],
     model_name: str = "dbmdz/bert-base-turkish-cased",
 ) -> List[Tuple[str, str]]:
     """
