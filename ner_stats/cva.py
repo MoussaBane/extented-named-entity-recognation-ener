@@ -1,8 +1,10 @@
 """Class-vector utilities: mean vectors and Common Vector Approach (CVA)."""
 
-from typing import Dict, Iterable, Sequence
+from typing import Dict, List, Sequence, Tuple
 
 import numpy as np
+
+from .embeddings import get_last_hidden_tokens_and_embeddings
 
 
 def _to_2d_array(vectors: Sequence[Sequence[float]] | np.ndarray) -> np.ndarray:
@@ -86,3 +88,79 @@ def compute_cva_common_vectors(
         common_vectors[class_label] = common_vec
 
     return common_vectors
+
+
+def classify_embedding_by_cosine_similarity(
+    embedding: Sequence[float] | np.ndarray,
+    class_vectors: Dict[str, Sequence[float] | np.ndarray],
+) -> str:
+    """
+    Classify a word embedding by cosine similarity against class vectors.
+
+    Args:
+        embedding: A single embedding vector with shape (hidden_size,).
+        class_vectors: Mapping {class_label: vector} where each vector has shape
+            (hidden_size,) or is array-like.
+
+    Returns:
+        The class label with the highest cosine similarity.
+    """
+    query = np.asarray(embedding, dtype=np.float64).reshape(-1)
+    if query.size == 0:
+        raise ValueError("The input embedding must not be empty.")
+
+    query_norm = np.linalg.norm(query)
+    if np.isclose(query_norm, 0.0):
+        raise ValueError("The input embedding must have non-zero norm.")
+
+    best_label = None
+    best_score = -np.inf
+
+    for class_label, vector in class_vectors.items():
+        candidate = np.asarray(vector, dtype=np.float64).reshape(-1)
+        if candidate.size != query.size:
+            raise ValueError(
+                f"Dimension mismatch for class '{class_label}': "
+                f"expected {query.size}, got {candidate.size}."
+            )
+
+        candidate_norm = np.linalg.norm(candidate)
+        if np.isclose(candidate_norm, 0.0):
+            continue
+
+        score = float(np.dot(query, candidate) / (query_norm * candidate_norm))
+        if score > best_score:
+            best_score = score
+            best_label = class_label
+
+    if best_label is None:
+        raise ValueError("No valid class vectors with non-zero norm were provided.")
+
+    return best_label
+
+
+def classify_sentence_tokens_by_cosine_similarity(
+    sentence: str,
+    class_vectors: Dict[str, Sequence[float] | np.ndarray],
+    model_name: str = "dbmdz/bert-base-turkish-cased",
+) -> List[Tuple[str, str]]:
+    """
+    Predict a class label for each token in a sentence using cosine similarity.
+
+    Returns:
+        A list of (token, predicted_label) pairs in token order.
+    """
+    tokens, token_embeddings = get_last_hidden_tokens_and_embeddings(
+        sentence,
+        model_name=model_name,
+    )
+
+    predictions: List[Tuple[str, str]] = []
+    for token, token_embedding in zip(tokens, token_embeddings):
+        predicted_label = classify_embedding_by_cosine_similarity(
+            token_embedding.detach().cpu().numpy(),
+            class_vectors,
+        )
+        predictions.append((token, predicted_label))
+
+    return predictions
