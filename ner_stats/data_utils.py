@@ -109,6 +109,52 @@ def validate_bio_labels(label_sequences: Iterable[Sequence[str]]) -> List[str]:
     return warnings
 
 
+def normalize_bio_sequence(labels: Sequence[str]) -> List[str]:
+    """
+    Normalize a BIO sequence by converting invalid I-tags into B-tags.
+
+    This preserves the entity type while making the sequence valid for training
+    and evaluation with standard BIO tooling.
+    """
+    normalized: List[str] = []
+    previous_type = ""
+    inside_entity = False
+
+    for label in labels:
+        if label == "O":
+            normalized.append(label)
+            inside_entity = False
+            previous_type = ""
+            continue
+
+        if "-" not in label:
+            normalized.append(label)
+            inside_entity = False
+            previous_type = ""
+            continue
+
+        prefix, entity_type = label.split("-", 1)
+        if prefix == "B":
+            normalized.append(label)
+            inside_entity = True
+            previous_type = entity_type
+            continue
+
+        if prefix == "I" and inside_entity and previous_type == entity_type:
+            normalized.append(label)
+        else:
+            normalized.append(f"B-{entity_type}")
+            inside_entity = True
+        previous_type = entity_type
+
+    return normalized
+
+
+def normalize_bio_labels(label_sequences: Iterable[Sequence[str]]) -> List[List[str]]:
+    """Normalize all BIO sequences using normalize_bio_sequence."""
+    return [normalize_bio_sequence(sequence) for sequence in label_sequences]
+
+
 def build_label_maps(label_sequences: Sequence[Sequence[str]]) -> Tuple[Dict[str, int], Dict[int, str]]:
     """Create stable label2id/id2label mappings from BIO labels."""
     labels = sorted({label for seq in label_sequences for label in seq})

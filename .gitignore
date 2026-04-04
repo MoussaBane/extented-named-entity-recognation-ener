@@ -9,6 +9,7 @@ __pycache__/
 # Results and outputs
 results/
 results_module_check/
+outputs/
 
 # IDE/editor
 .vscode/

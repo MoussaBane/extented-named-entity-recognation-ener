@@ -35,6 +35,7 @@ from ner_stats.cva import classify_embedding_by_cosine_similarity, compute_cva_c
 from ner_stats.data_utils import (
     build_label_maps,
     read_conll_bio,
+    normalize_bio_labels,
     set_global_seed,
     validate_bio_labels,
 )
@@ -384,9 +385,21 @@ def main() -> None:
     eval_tokens, eval_labels = read_conll_bio(args.eval_file)
 
     bio_warnings = validate_bio_labels([*train_labels, *eval_labels])
+    train_labels = normalize_bio_labels(train_labels)
+    eval_labels = normalize_bio_labels(eval_labels)
+    normalized_bio_warnings = validate_bio_labels([*train_labels, *eval_labels])
+
     bio_warning_path = os.path.join(args.results_dir, "bio_validation_warnings.txt")
     with open(bio_warning_path, "w", encoding="utf-8") as f:
         for warning in bio_warnings:
+            f.write(warning + "\n")
+
+    normalized_bio_warning_path = os.path.join(
+        args.results_dir,
+        "bio_validation_warnings_after_normalization.txt",
+    )
+    with open(normalized_bio_warning_path, "w", encoding="utf-8") as f:
+        for warning in normalized_bio_warnings:
             f.write(warning + "\n")
 
     label2id, id2label = build_label_maps([*train_labels, *eval_labels])
@@ -474,6 +487,8 @@ def main() -> None:
         trainer.train()
         trainer.save_model(args.output_dir)
 
+    embedding_model_source = args.output_dir if is_transformers_model_dir(args.output_dir) else resolved_model_source
+
     bert_eval_sequences_pred = trainer_predictions_to_labels(trainer, eval_dataset, id2label)
 
     # Align gold labels to the same first-subtoken positions used by BERT and CVA.
@@ -502,7 +517,7 @@ def main() -> None:
         include_o_label=False,
     )
 
-    cva_embedder = TransformerEmbedder(model_name=resolved_model_source)
+    cva_embedder = TransformerEmbedder(model_name=embedding_model_source)
     cva_class_vectors: ClassVectors = build_cva_class_vectors(
         train_tokens=train_tokens,
         train_labels=train_labels,
@@ -576,7 +591,8 @@ def main() -> None:
         "num_train_sentences": len(train_tokens),
         "num_eval_sentences": len(eval_tokens),
         "num_labels": len(label_order),
-        "bio_warning_count": len(bio_warnings),
+        "bio_warning_count_raw": len(bio_warnings),
+        "bio_warning_count_after_normalization": len(normalized_bio_warnings),
         "bert": {
             "macro_f1_with_o": bert_metrics_with_o["macro_f1"],
             "macro_f1_without_o": bert_metrics_without_o["macro_f1"],
@@ -595,7 +611,11 @@ def main() -> None:
         json.dump(summary, f, indent=2, ensure_ascii=False)
 
     print("[INFO] Pipeline completed.")
-    print(f"[INFO] BIO warnings: {len(bio_warnings)} (saved to {bio_warning_path})")
+    print(
+        f"[INFO] BIO warnings (raw -> normalized): "
+        f"{len(bio_warnings)} -> {len(normalized_bio_warnings)} "
+        f"(saved to {bio_warning_path} and {normalized_bio_warning_path})"
+    )
     print(
         f"[INFO] BERT macro-F1 (w/o O): {bert_metrics_without_o['macro_f1']:.4f} | "
         f"CVA macro-F1 (w/o O): {cva_metrics_without_o['macro_f1']:.4f}"
