@@ -49,6 +49,12 @@ def parse_args() -> argparse.Namespace:
         default="results",
         help="Directory where statistics and plots will be saved (default: results)",
     )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cpu",
+        help="Device for embedding/model extraction if used (default: cpu)",
+    )
     return parser.parse_args()
 
 

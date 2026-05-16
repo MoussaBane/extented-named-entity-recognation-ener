@@ -143,6 +143,7 @@ def classify_sentence_tokens_by_cosine_similarity(
     sentence: str,
     class_vectors: Mapping[str, Sequence[float] | np.ndarray],
     model_name: str = "dbmdz/bert-base-turkish-cased",
+    embedder=None,
 ) -> List[Tuple[str, str]]:
     """
     Predict a class label for each token in a sentence using cosine similarity.
@@ -150,10 +151,13 @@ def classify_sentence_tokens_by_cosine_similarity(
     Returns:
         A list of (token, predicted_label) pairs in token order.
     """
-    tokens, token_embeddings = get_last_hidden_tokens_and_embeddings(
-        sentence,
-        model_name=model_name,
-    )
+    if embedder is not None:
+        tokens, token_embeddings = embedder.encode_sentence_subwords(sentence)
+    else:
+        tokens, token_embeddings = get_last_hidden_tokens_and_embeddings(
+            sentence,
+            model_name=model_name,
+        )
 
     predictions: List[Tuple[str, str]] = []
     for token, token_embedding in zip(tokens, token_embeddings):

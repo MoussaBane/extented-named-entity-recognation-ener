@@ -133,6 +133,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Skip training and only run prediction/evaluation with an existing model in --output-dir.",
     )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cpu",
+        help="Device for embedding/model extraction (e.g., 'cpu' or 'cuda')",
+    )
     return parser.parse_args()
 
 
@@ -517,7 +523,7 @@ def main() -> None:
         include_o_label=False,
     )
 
-    cva_embedder = TransformerEmbedder(model_name=embedding_model_source)
+    cva_embedder = TransformerEmbedder(model_name=embedding_model_source, device=args.device)
     cva_class_vectors: ClassVectors = build_cva_class_vectors(
         train_tokens=train_tokens,
         train_labels=train_labels,
