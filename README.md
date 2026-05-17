@@ -119,6 +119,26 @@ If `--skip-bert-train` is set and `--output-dir` already contains a Hugging Face
 python scripts/train_ner.py --train-file data/full_train.conll --eval-file data/full_eval.conll --output-dir outputs/bert-ner-full --results-dir results/model_comparison_full --skip-bert-train
 ```
 
+## Embedding analysis and visualization
+
+Use the provided embedding analysis pipeline to extract contextual embeddings, compute class vectors (mean or CVA), and produce PCA/t-SNE/UMAP visualizations suitable for thesis figures.
+
+Run the pipeline:
+
+```bash
+python scripts/run_embedding_analysis.py --model-name dbmdz/bert-base-turkish-cased --output-dir results/embedding_analysis --use-cva
+```
+
+Outputs (saved under the `--output-dir`):
+
+- `train_embeddings.csv`, `train_embeddings.npy` — token-level extracted embeddings for the training split
+- `eval_embeddings.csv`, `eval_embeddings.npy` — token-level extracted embeddings for the evaluation split
+- `class_vectors.json` — class mean or CVA common vectors
+- `pca_embeddings.png`, `pca_embeddings_3d.png`, `tsne_embeddings.png`, `umap_embeddings.png` — visualizations
+- `classification_report.json`, `confusion_matrix.png`, `metrics_summary.csv` — evaluation artifacts
+
+See `notebooks/embedding_visualization.ipynb` for a notebook-based reproduction of the PCA steps and quick inspection.
+
 If no loadable checkpoint exists in `--output-dir`, the script falls back to `--model-name`.
 
 ## Pipeline Explanation
