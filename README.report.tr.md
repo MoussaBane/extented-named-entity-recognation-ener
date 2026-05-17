@@ -202,7 +202,7 @@ data/
 
 ---
 
-## 11. INCEP TION / CoNLL Entegrasyonu
+## 11. INCEpTION / CoNLL Entegrasyonu
 
 - `conll_reader.py` parser'ı, token'in ilk boşluklu sütun ve son sütunun BIO etiketi olduğu CoNLL satırlarını bekler.
 - Boş satırlar cümleleri ayırır.
@@ -400,7 +400,7 @@ python scripts/train_ner.py \
 ## 18. Depo Yapısı Ağacı
 
 ```text
-extented-named-entity-recognation-ener/
+extended-named-entity-recognition-ener/
 ├── data/                       # annotation klasörleri, tagset, train/eval bölmeleri
 ├── ner_stats/                  # çekirdek kütüphane: parserlar, yardımcılar, gömmeler, CVA, değerlendirme
 │   ├── __init__.py

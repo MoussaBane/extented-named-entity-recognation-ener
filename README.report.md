@@ -204,7 +204,7 @@ data/
 
 ---
 
-## 11. INCE PTION / CoNLL Integration
+## 11. INCEpTION / CoNLL Integration
 
 - The `conll_reader.py` parser expects CoNLL rows where the token is the first whitespace column and the final column is the BIO tag.
 - Blank lines separate sentences.
@@ -402,7 +402,7 @@ python scripts/train_ner.py \
 ## 18. Repository Structure Tree
 
 ```text
-extented-named-entity-recognation-ener/
+extended-named-entity-recognition-ener/
 ├── data/                       # annotation folders, tagset, train/eval splits
 ├── ner_stats/                  # core library: parsers, utils, embeddings, CVA, evaluation
 │   ├── __init__.py
