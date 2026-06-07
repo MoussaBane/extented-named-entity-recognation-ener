@@ -241,6 +241,36 @@ This repository contributes a reusable experimental pipeline for Turkish ENER re
 - Add contrastive learning and augmentation experiments mentioned in the project goals.
 - Add a license file before public release.
 
+## New scripts (cross-validation, CRF baseline, OOV, comparisons)
+
+The repository now includes additional scripts to support cross-validation and expanded experiments:
+
+- 4-fold cross-validation (BERT):
+
+```bash
+python scripts/run_cross_validation.py --data-file data/full_train.conll --model-name dbmdz/bert-base-turkish-cased --output-dir results/cross_validation
+```
+
+- CRF baseline (k-fold):
+
+```bash
+python scripts/run_crf_baseline.py --data-file data/full_train.conll --output-dir results/crf_baseline
+```
+
+- OOV/top-3 retrieval experiment:
+
+```bash
+python scripts/oov_experiment.py --train-file data/full_train.conll --eval-file data/full_eval.conll --output-dir results/oov_experiment
+```
+
+- Context-only vs CVA vs Combined comparison:
+
+```bash
+python scripts/compare_context_cva.py --train-file data/full_train.conll --eval-file data/full_eval.conll --output-dir results/context_vs_cva
+```
+
+These scripts reuse the existing utilities under `ner_stats/` and write per-experiment outputs to the specified `--output-dir`.
+
 ## Manuscript-Style Methods and Results
 
 ### Methods

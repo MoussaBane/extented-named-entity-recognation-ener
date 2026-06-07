@@ -139,6 +139,41 @@ def classify_embedding_by_cosine_similarity(
     return best_label
 
 
+def top_k_cosine_similarities(
+    embedding: Sequence[float] | np.ndarray,
+    class_vectors: Mapping[str, Sequence[float] | np.ndarray],
+    k: int = 3,
+) -> List[Tuple[str, float]]:
+    """
+    Return the top-k class labels with highest cosine similarity to `embedding`.
+
+    Returns a list of (label, score) sorted by descending score.
+    """
+    query = np.asarray(embedding, dtype=np.float64).reshape(-1)
+    if query.size == 0:
+        raise ValueError("The input embedding must not be empty.")
+
+    query_norm = np.linalg.norm(query)
+    if np.isclose(query_norm, 0.0):
+        raise ValueError("The input embedding must have non-zero norm.")
+
+    scores: List[Tuple[str, float]] = []
+    for class_label, vector in class_vectors.items():
+        candidate = np.asarray(vector, dtype=np.float64).reshape(-1)
+        if candidate.size != query.size:
+            raise ValueError(
+                f"Dimension mismatch for class '{class_label}': expected {query.size}, got {candidate.size}."
+            )
+        candidate_norm = np.linalg.norm(candidate)
+        if np.isclose(candidate_norm, 0.0):
+            continue
+        score = float(np.dot(query, candidate) / (query_norm * candidate_norm))
+        scores.append((class_label, score))
+
+    scores.sort(key=lambda x: x[1], reverse=True)
+    return scores[:k]
+
+
 def classify_sentence_tokens_by_cosine_similarity(
     sentence: str,
     class_vectors: Mapping[str, Sequence[float] | np.ndarray],
