@@ -24,7 +24,7 @@ from scripts.train_ner import (
     trainer_predictions_to_labels,
     get_word_level_alignment,
 )
-from transformers import AutoTokenizer, AutoModelForTokenClassification, TrainingArguments, Trainer
+from transformers import AutoTokenizer, AutoModelForTokenClassification, TrainingArguments, Trainer, DataCollatorForTokenClassification
 
 
 def parse_args():
@@ -114,6 +114,7 @@ def main():
             ),
             train_dataset=train_dataset,
             eval_dataset=val_dataset,
+            data_collator=DataCollatorForTokenClassification(tokenizer),
         )
 
         if not args.skip_bert_train:
