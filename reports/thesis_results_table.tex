@@ -1,0 +1,19 @@
+% LaTeX table for thesis (place in manuscript as needed)
+\begin{table}[ht]
+\centering
+\caption{Summary of evaluation results (full-data experiments)}
+\begin{tabular}{lccp{5cm}}
+\toprule
+Method & Accuracy & Macro F1 & Notes \\
+\midrule
+BERT (4-fold CV) & $0.7824\pm0.0074$ & $0.0340\pm0.0121$ & mean support $\approx6228$ tokens/fold \\
+CRF (4-fold CV) & -- & $0.3138\pm0.0211$ & CRF baseline (k-fold) \\
+Context-only (eval) & $0.3294$ & $0.0931$ & evaluation split (support 1855) \\
+CVA-only (eval) & $0.0167$ & $0.0243$ & similarity-based CVA \\
+Combined (context+CVA) & $0.0302$ & $0.0317$ & averaged scoring ensemble \\
+\bottomrule
+\end{tabular}
+\label{tab:thesis_results_summary}
+\end{table}
+
+% OOV note: 235 token surfaces in full eval.

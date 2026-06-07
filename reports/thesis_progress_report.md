@@ -49,3 +49,7 @@ Date: 2026-06-07
 7. Suggested thesis contributions
 
 - A reproducible comparison of BERT vs CVA vs CRF on Turkish extended NER, including OOV analysis and prototype-based interpretability.
+
+1. Manuscript-ready summary
+
+- In our full-data experiments BERT (4-fold CV) achieved the highest token-level accuracy ($0.7824\pm0.0074$) while the CRF baseline attained substantially higher macro F1 ($0.3138\pm0.0211$), indicating different strengths: BERT optimizes overall token correctness whereas CRF better preserves per-class recall on the sparse entity labels. The context-only CVA prototype method yields modest macro F1 ($0.0931$) and highlights considerable room for prototype-based improvements; the OOV analysis found 235 unseen token surfaces in the evaluation split.
