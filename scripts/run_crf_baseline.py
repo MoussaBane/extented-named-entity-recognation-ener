@@ -68,6 +68,18 @@ def ensure_dir(path: str) -> None:
     os.makedirs(path, exist_ok=True)
 
 
+def to_jsonable(obj):
+    import numpy as _np
+
+    if isinstance(obj, _np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, dict):
+        return {k: to_jsonable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [to_jsonable(v) for v in obj]
+    return obj
+
+
 def main():
     args = parse_args()
     set_global_seed(args.seed)
@@ -102,7 +114,7 @@ def main():
         ensure_dir(fold_dir)
 
         with open(os.path.join(fold_dir, "metrics.json"), "w", encoding="utf-8") as f:
-            json.dump(metrics, f, indent=2, ensure_ascii=False)
+            json.dump(to_jsonable(metrics), f, indent=2, ensure_ascii=False)
 
         # use evaluation_report to save confusion matrix plot & CSV
         evaluation_report.generate_reports(y_val, y_pred, fold_dir)

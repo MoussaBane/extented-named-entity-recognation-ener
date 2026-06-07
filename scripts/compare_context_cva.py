@@ -30,6 +30,18 @@ def ensure_dir(path: str) -> None:
     os.makedirs(path, exist_ok=True)
 
 
+def to_jsonable(obj):
+    import numpy as _np
+
+    if isinstance(obj, _np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, dict):
+        return {k: to_jsonable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [to_jsonable(v) for v in obj]
+    return obj
+
+
 def main():
     args = parse_args()
     ensure_dir(args.output_dir)
@@ -105,7 +117,7 @@ def main():
 
     summary = {"context": metrics_ctx, "cva": metrics_cva, "combined": metrics_comb}
     with open(os.path.join(args.output_dir, "comparison_summary.json"), "w", encoding="utf-8") as f:
-        json.dump(summary, f, indent=2, ensure_ascii=False)
+        json.dump(to_jsonable(summary), f, indent=2, ensure_ascii=False)
 
     print(f"Comparison completed. Results saved to {args.output_dir}")
 
