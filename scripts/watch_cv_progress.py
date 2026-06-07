@@ -2,6 +2,7 @@ import time
 import argparse
 import os
 import subprocess
+import sys
 
 
 def count_completed_folds(results_dir, num_folds):
@@ -14,18 +15,8 @@ def count_completed_folds(results_dir, num_folds):
 
 
 def run_aggregator(results_dir, num_folds):
-    cmd = [
-        os.path.join(os.path.dirname(os.__file__), '..', 'Scripts', 'python.exe') if False else 'python',
-        '-m', 'scripts.aggregate_cv_results',
-        '--results-dir', results_dir,
-        '--num-folds', str(num_folds)
-    ]
-    # Use subprocess.run to invoke aggregator in the same venv when possible
-    try:
-        subprocess.run(cmd, check=False)
-    except Exception:
-        # fallback: call as module via current interpreter
-        subprocess.run(['python', '-m', 'scripts.aggregate_cv_results', '--results-dir', results_dir, '--num-folds', str(num_folds)])
+    cmd = [sys.executable, '-m', 'scripts.aggregate_cv_results', '--results-dir', results_dir, '--num-folds', str(num_folds)]
+    subprocess.run(cmd, check=False)
 
 
 def main():

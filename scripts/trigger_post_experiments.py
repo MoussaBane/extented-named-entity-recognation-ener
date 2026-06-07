@@ -8,6 +8,7 @@ import time
 import os
 import subprocess
 import argparse
+import sys
 
 
 def count_completed_folds(results_dir, num_folds):
@@ -20,7 +21,7 @@ def count_completed_folds(results_dir, num_folds):
 
 
 def run_module(module, args_list):
-    cmd = ['python', '-m', module] + args_list
+    cmd = [sys.executable, '-m', module] + args_list
     print('Running:', ' '.join(cmd))
     return subprocess.run(cmd, check=False)
 

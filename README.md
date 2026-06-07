@@ -221,7 +221,7 @@ Observed summary from the example results:
 
 The repository also includes example CSV outputs for label and type counts in `results_example/`.
 
-No paper-level model scores are reported in this README because the repository does not currently ship a finalized results table. Use the generated files under `results/model_comparison_*` to populate the final manuscript.
+The full-data score summaries are now available in `results/` and are reflected in the report files and tables above. Use those generated outputs when preparing the final manuscript.
 
 ## Scientific Contribution
 
@@ -234,7 +234,7 @@ This repository contributes a reusable experimental pipeline for Turkish ENER re
 
 ## Future Work
 
-- Add a finalized paper-ready results table with full-dataset scores.
+- Package the measured results into final thesis tables and figure captions.
 - Document the dataset provenance, split policy, and annotation guidelines.
 - Add multi-seed evaluation and significance testing.
 - Expand the repository with character-level boundary detection experiments.
@@ -287,9 +287,19 @@ In addition to modeling, the pipeline computes corpus-level statistics and quali
 
 The repository includes example corpus statistics in `results_example/stats.json`. In that summary, the corpus contains 130 document folders, of which 34 are annotated and 96 are unannotated. The annotated portion comprises 1,142 sentences and 29,195 tokens. Entities appear in 980 sentences, corresponding to an entity-sentence ratio of 0.8581. The corpus contains 161 BIO labels, 97 distinct entity types, and an average sentence length of 25.56 tokens.
 
+The full-data experiments are also available now:
+
+- 4-fold BERT cross-validation on `data/full_train.conll`: accuracy `0.7824 ± 0.0074`, macro F1 `0.0340 ± 0.0121`.
+- 4-fold CRF cross-validation on `data/full_train.conll`: macro F1 `0.3138 ± 0.0211`.
+- OOV experiment on `data/full_eval.conll`: `235` OOV items identified.
+- Context vs CVA comparison on `data/full_eval.conll`:
+	- context-only: accuracy `0.3294`, macro F1 `0.0931`
+	- CVA-only: accuracy `0.0167`, macro F1 `0.0243`
+	- combined: accuracy `0.0302`, macro F1 `0.0317`
+
 The analysis pipeline also generates label-frequency and type-frequency tables, together with plots for entity distribution and sentence-length variation. These outputs provide a descriptive overview of the dataset and support corpus inspection before model training.
 
-The BERT-versus-CVA evaluation pipeline is fully implemented and exports precision, recall, F1-score, confusion matrices, and inference-time summaries for both methods. However, the repository does not currently include a finalized paper table with full-dataset model scores, so no numeric model-performance claims are stated here beyond the available corpus statistics.
+The BERT-versus-CVA evaluation pipeline is fully implemented and exports precision, recall, F1-score, confusion matrices, and inference-time summaries for both methods. The repository now also includes fold-level confusion matrices, the CRF baseline, and the full OOV/context-vs-CVA comparisons needed for the thesis write-up.
 
 ## License
 

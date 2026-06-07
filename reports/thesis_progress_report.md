@@ -26,18 +26,25 @@ Date: 2026-06-07
 
 4. Experimental results
 
-- Results will be written under `results/` (see individual script `--output-dir` defaults). Run scripts to generate current numeric outputs.
+- Full 4-fold BERT cross-validation is complete on `data/full_train.conll` with mean accuracy `0.7824 ± 0.0074` and mean macro F1 `0.0340 ± 0.0121`.
+- Full 4-fold CRF cross-validation is complete with mean macro F1 `0.3138 ± 0.0211`.
+- The full OOV experiment completed on `data/full_eval.conll` and identified `235` unseen token surfaces.
+- The full context-vs-CVA comparison completed on `data/full_eval.conll`:
+	- context-only: accuracy `0.3294`, macro F1 `0.0931`
+	- CVA-only: accuracy `0.0167`, macro F1 `0.0243`
+	- combined: accuracy `0.0302`, macro F1 `0.0317`
 
 5. Remaining work
 
-- Integrate CRF confusion matrices side-by-side with BERT and CVA in a single comparison report.
-- Add PCA figures with captions and explained variance text tailored for the thesis.
-- Create thesis-ready tables (LaTeX/markdown) from aggregated results.
+- Assemble the final thesis tables and figures from the completed outputs in `results/`.
+- Decide whether the manuscript should emphasize the CRF baseline or the context-only similarity model as the main non-BERT comparator.
+- Add short explanatory captions for the final figures and metric tables.
 
 6. Risks and limitations
 
 - The CRF baseline requires `sklearn-crfsuite` and may be slower on large datasets.
 - OOV selection uses a conservative surface-based definition; for multi-word entities additional grouping logic may be needed.
+- The full comparison scripts run on the same transformer backbone as the BERT baseline, so runtime is dominated by embedding extraction rather than the scoring step.
 
 7. Suggested thesis contributions
 

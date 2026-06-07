@@ -73,6 +73,8 @@ def to_jsonable(obj):
 
     if isinstance(obj, _np.ndarray):
         return obj.tolist()
+    if isinstance(obj, _np.generic):
+        return obj.item()
     if isinstance(obj, dict):
         return {k: to_jsonable(v) for k, v in obj.items()}
     if isinstance(obj, (list, tuple)):
