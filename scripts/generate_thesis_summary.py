@@ -161,55 +161,51 @@ def build_crf_cv_section(crf_dir: str):
     if not summary:
         return None, None, "*(CRF CV results not found)*"
 
-    # try reading per-fold metrics
-    fold_rows = []
-    for i in range(summary.get("num_folds", 4)):
-        fold_m = load_json(os.path.join(crf_dir, f"fold_{i}", "metrics.json"))
-        if fold_m:
-            fold_rows.append({
-                "fold": i,
-                "macro_precision": fold_m.get("macro_precision", fold_m.get("precision")),
-                "macro_recall": fold_m.get("macro_recall", fold_m.get("recall")),
-                "macro_f1": fold_m.get("macro_f1", fold_m.get("f1")),
-                "accuracy": fold_m.get("accuracy"),
-                "support": fold_m.get("support"),
-            })
+    # prefer rich folds+aggregates format; fall back to reading per-fold metrics.json
+    folds = summary.get("folds", [])
+    agg = summary.get("aggregates", {})
+    if not folds:
+        num = summary.get("num_folds", summary.get("num_folds_found", 4))
+        for i in range(num):
+            fold_m = load_json(os.path.join(crf_dir, f"fold_{i}", "metrics.json"))
+            if fold_m:
+                folds.append({
+                    "fold": i,
+                    "macro_precision": fold_m.get("macro_precision", 0.0),
+                    "macro_recall": fold_m.get("macro_recall", 0.0),
+                    "macro_f1": fold_m.get("macro_f1", 0.0),
+                    "accuracy": fold_m.get("accuracy", 0.0),
+                    "support": fold_m.get("support", 0),
+                })
 
-    import numpy as np
     md_rows = []
-    for f in fold_rows:
+    for f in folds:
+        fold_id = f.get("fold", folds.index(f))
         md_rows.append([
-            f"Fold {f['fold']}",
+            f"Fold {fold_id}",
             fmt(f.get("macro_precision"), 4),
             fmt(f.get("macro_recall"), 4),
             fmt(f.get("macro_f1"), 4),
             fmt(f.get("accuracy"), 4),
-            str(int(f["support"])) if f.get("support") else "N/A",
+            str(int(f.get("support", 0))),
         ])
-
-    f1_mean = summary.get("macro_f1_mean")
-    f1_std = summary.get("macro_f1_std")
-    prec_mean = summary.get("macro_precision_mean")
-    prec_std = summary.get("macro_precision_std")
-    rec_mean = summary.get("macro_recall_mean")
-    rec_std = summary.get("macro_recall_std")
-
     md_rows.append([
         "**Mean ± Std**",
-        fmt_pm(prec_mean, prec_std) if prec_mean is not None else "N/A",
-        fmt_pm(rec_mean, rec_std) if rec_mean is not None else "N/A",
-        fmt_pm(f1_mean, f1_std),
-        "N/A",
-        "—",
+        fmt_pm(agg.get("macro_precision", {}).get("mean"), agg.get("macro_precision", {}).get("std")),
+        fmt_pm(agg.get("macro_recall", {}).get("mean"), agg.get("macro_recall", {}).get("std")),
+        fmt_pm(agg.get("macro_f1", {}).get("mean"), agg.get("macro_f1", {}).get("std")),
+        fmt_pm(agg.get("accuracy", {}).get("mean"), agg.get("accuracy", {}).get("std")),
+        fmt(agg.get("support", {}).get("mean"), 1),
     ])
 
     headers = ["Fold", "Precision", "Recall", "Macro F1", "Accuracy", "Support"]
     md = md_table(headers, md_rows)
 
     latex_rows = []
-    for f in fold_rows:
+    for f in folds:
+        fold_id = f.get("fold", folds.index(f))
         latex_rows.append([
-            f"Fold {f['fold']}",
+            f"Fold {fold_id}",
             fmt(f.get("macro_precision"), 4),
             fmt(f.get("macro_recall"), 4),
             fmt(f.get("macro_f1"), 4),
@@ -217,10 +213,10 @@ def build_crf_cv_section(crf_dir: str):
         ])
     latex_rows.append([
         "Mean $\\pm$ Std",
-        fmt_pm(prec_mean, prec_std) if prec_mean is not None else "N/A",
-        fmt_pm(rec_mean, rec_std) if rec_mean is not None else "N/A",
-        fmt_pm(f1_mean, f1_std),
-        "N/A",
+        fmt_pm(agg.get("macro_precision", {}).get("mean"), agg.get("macro_precision", {}).get("std")),
+        fmt_pm(agg.get("macro_recall", {}).get("mean"), agg.get("macro_recall", {}).get("std")),
+        fmt_pm(agg.get("macro_f1", {}).get("mean"), agg.get("macro_f1", {}).get("std")),
+        fmt_pm(agg.get("accuracy", {}).get("mean"), agg.get("accuracy", {}).get("std")),
     ])
     latex = latex_table(
         "CRF Baseline 4-Fold Cross-Validation Results",

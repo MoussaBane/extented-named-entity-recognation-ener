@@ -143,24 +143,35 @@ def main():
 
         fold_metrics.append(metrics)
 
-    # aggregate
-    import math
-
+    # aggregate — build rich folds+aggregates structure
     def safe_get(m: dict, key: str) -> float:
         return float(m.get(key, 0.0))
 
-    macro_f1s = [safe_get(m, "macro_f1") for m in fold_metrics]
-    macro_precision = [safe_get(m, "macro_precision") for m in fold_metrics]
-    macro_recall = [safe_get(m, "macro_recall") for m in fold_metrics]
+    folds_data = []
+    for fold_idx, m in enumerate(fold_metrics):
+        folds_data.append({
+            "fold": fold_idx,
+            "accuracy": safe_get(m, "accuracy"),
+            "macro_f1": safe_get(m, "macro_f1"),
+            "macro_precision": safe_get(m, "macro_precision"),
+            "macro_recall": safe_get(m, "macro_recall"),
+            "support": float(m.get("support", 0)),
+        })
+
+    def _agg(key):
+        vals = [f[key] for f in folds_data]
+        return {"mean": float(np.mean(vals)), "std": float(np.std(vals, ddof=0))}
 
     summary = {
-        "num_folds": args.num_folds,
-        "macro_f1_mean": float(np.mean(macro_f1s)) if macro_f1s else 0.0,
-        "macro_f1_std": float(np.std(macro_f1s, ddof=0)) if macro_f1s else 0.0,
-        "macro_precision_mean": float(np.mean(macro_precision)) if macro_precision else 0.0,
-        "macro_precision_std": float(np.std(macro_precision, ddof=0)) if macro_precision else 0.0,
-        "macro_recall_mean": float(np.mean(macro_recall)) if macro_recall else 0.0,
-        "macro_recall_std": float(np.std(macro_recall, ddof=0)) if macro_recall else 0.0,
+        "num_folds_found": len(folds_data),
+        "folds": folds_data,
+        "aggregates": {
+            "accuracy": _agg("accuracy"),
+            "macro_f1": _agg("macro_f1"),
+            "macro_precision": _agg("macro_precision"),
+            "macro_recall": _agg("macro_recall"),
+            "support": _agg("support"),
+        },
     }
 
     with open(os.path.join(args.output_dir, "cv_summary.json"), "w", encoding="utf-8") as f:

@@ -7,7 +7,7 @@ from ner_stats import visualization
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--out-dir", default="results/embedding_smoke")
+parser.add_argument("--out-dir", default="results/embedding_full")
 args = parser.parse_args()
 
 OUT = args.out_dir

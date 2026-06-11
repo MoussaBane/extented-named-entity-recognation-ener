@@ -1,31 +1,34 @@
 # Turkish Extended Named Entity Recognition (ENER)
 
-This repository contains a Turkish Extended Named Entity Recognition (ENER) workflow for corpus analysis, quality control, model training, and comparative evaluation. It supports CoNLL-style annotation parsing, corpus statistics, visualization, BERT-based token classification, transformer embedding extraction, and a Common Vector Approach (CVA) classifier for sentence-level inference.
+This repository contains a Turkish Extended Named Entity Recognition (ENER) workflow for corpus analysis, quality control, model training, and comparative evaluation. It supports CoNLL-style annotation parsing, corpus statistics, visualization, BERT-based token classification, transformer embedding extraction, a CRF baseline, and a Common Vector Approach (CVA) classifier.
 
 ## Project Overview
 
 The project is organized around two complementary goals:
 
 1. Characterize the annotated corpus through statistics, tagset checks, and visual summaries.
-2. Compare a fine-tuned BERT NER model with a CVA-based similarity classifier using the same BIO-aligned evaluation setup.
-
-The repository is designed to support reproducible analysis of Turkish ENER data while keeping the pipeline simple enough to run from the command line.
+2. Compare a fine-tuned BERT NER model against a CRF baseline and a CVA-based similarity classifier using shared BIO-aligned evaluation with 4-fold cross-validation.
 
 ## Key Features
 
 - CoNLL annotation parsing for INCEpTION-style document folders.
 - Corpus statistics for tokens, sentences, entity density, label counts, and entity-type distribution.
 - Tagset quality control against `data/ENER-tagset.tsv`.
-- Visualizations for entity frequency, entity-to-sentence ratio, and sentence length distributions.
+- 4-fold cross-validation for both BERT and CRF, with per-fold precision/recall/F1 and mean±std aggregates.
 - BERT-based token classification with first-subtoken alignment.
+- CRF baseline with the same fold splits for a fair comparison.
 - Transformer embedding extraction for CVA class-vector construction.
 - CVA similarity classification using cosine similarity over class vectors.
-- Shared evaluation for precision, recall, F1, confusion matrices, and inference timing.
+- Context-only vs CVA vs Combined classification experiments.
+- OOV entity experiment with top-3 nearest-label retrieval.
+- PCA/t-SNE/UMAP visualizations with prototype overlay and explained variance.
+- Top-N frequent-label confusion matrices (in addition to full confusion matrices).
+- Thesis-ready Markdown and LaTeX table generator covering all experiments.
 
 ## Project Structure
 
 ```text
-extented-named-entity-recognation-ener/
+turkish-extended-ner/
 ├── data/
 │   ├── annotation/             # CoNLL annotation folders
 │   ├── ENER-tagset.tsv         # Canonical tagset used for QC
@@ -33,13 +36,31 @@ extented-named-entity-recognation-ener/
 │   ├── _smoke_eval.conll       # Small evaluation sample for quick runs
 │   ├── full_train.conll        # Full training split
 │   └── full_eval.conll         # Full evaluation split
-├── ner_stats/                  # Corpus analysis, tagset, span, and evaluation utilities
+├── ner_stats/                  # Core utilities
+│   ├── cva.py                  # CVA class vectors and cosine similarity (top-k)
+│   ├── data_utils.py           # CoNLL parsing, BIO validation, label maps
+│   ├── embeddings.py           # TransformerEmbedder (word-aligned extraction)
+│   ├── embedding_analysis.py   # Embedding aggregation and class vector building
+│   ├── evaluation.py           # Token-level precision/recall/F1/confusion
+│   ├── evaluation_report.py    # Report generation (JSON, CSV, PNG, top-N confusion)
+│   ├── statistics.py           # Corpus-level statistics
+│   ├── visualization.py        # PCA, t-SNE, UMAP, prototype overlay plots
+│   └── ...                     # tagset, spans, char_features, contrastive, timing
 ├── scripts/
-│   ├── run_analysis.py         # Corpus analysis CLI
-│   └── train_ner.py            # End-to-end BERT + CVA pipeline
-├── results/                    # Generated analysis and comparison outputs
-├── results_example/            # Example summary outputs
-├── outputs/                    # Model checkpoints and intermediate artifacts
+│   ├── train_ner.py                  # End-to-end BERT + CVA pipeline (single run)
+│   ├── run_cross_validation.py       # 4-fold CV for BERT
+│   ├── run_crf_baseline.py           # 4-fold CV for CRF baseline
+│   ├── run_embedding_analysis.py     # Embedding extraction, CVA, PCA/t-SNE/UMAP
+│   ├── compare_context_cva.py        # Context-only vs CVA vs Combined experiment
+│   ├── oov_experiment.py             # OOV entity top-3 retrieval experiment
+│   ├── generate_prototype_visuals.py # Prototype PCA overlay and nearest-neighbor listing
+│   ├── generate_thesis_summary.py    # Thesis-ready Markdown + LaTeX report generator
+│   ├── run_analysis.py               # Corpus analysis CLI
+│   ├── run_char_ner.py               # Character-level CNN NER experiment
+│   ├── run_contrastive_ner.py        # Contrastive learning NER experiment
+│   └── run_multi_seed.py             # Multi-seed evaluation with statistical tests
+├── results/                    # Generated experiment outputs
+├── outputs/                    # Model checkpoints
 ├── requirements.txt
 └── README.md
 ```
@@ -56,8 +77,8 @@ extented-named-entity-recognation-ener/
 #### Windows PowerShell
 
 ```powershell
-git clone https://github.com/MoussaBane/extented-named-entity-recognation-ener.git
-cd extented-named-entity-recognation-ener
+git clone https://github.com/MoussaBane/turkish-extended-ner.git
+cd turkish-extended-ner
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -66,8 +87,8 @@ pip install -r requirements.txt
 #### Linux or macOS
 
 ```bash
-git clone https://github.com/MoussaBane/extented-named-entity-recognation-ener.git
-cd extented-named-entity-recognation-ener
+git clone https://github.com/MoussaBane/turkish-extended-ner.git
+cd turkish-extended-ner
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -83,223 +104,171 @@ Run the analysis pipeline to compute corpus statistics, validate the tagset, and
 python scripts/run_analysis.py --data-root data/annotation --results-dir results
 ```
 
-Expected outputs:
+Expected outputs: `results/stats.json`, `results/label_counts.csv`, `results/type_counts.csv`, `results/plots/*.png`.
 
-- `results/stats.json`
-- `results/label_counts.csv`
-- `results/type_counts.csv`
-- `results/plots/*.png`
-- `results/unused_tags_in_corpus.txt`
-- `results/unknown_types_in_tagset_comparison.txt`
-
-### 2. End-to-end BERT + CVA experiment
-
-Run the NER comparison pipeline on the provided smoke split:
+### 2. End-to-end BERT + CVA experiment (single run)
 
 ```bash
-python scripts/train_ner.py --train-file data/_smoke_train.conll --eval-file data/_smoke_eval.conll --output-dir outputs/bert-ner-smoke --results-dir results/model_comparison_smoke
+python scripts/train_ner.py \
+    --train-file data/full_train.conll \
+    --eval-file data/full_eval.conll \
+    --output-dir outputs/bert-ner-full \
+    --results-dir results/model_comparison_full
 ```
 
-Expected outputs:
+Expected outputs: `metrics_bert_with_o.json`, `metrics_cva_with_o.json`, `comparison_summary.json`, confusion matrices.
 
-- `metrics_bert_with_o.json`
-- `metrics_bert_without_o.json`
-- `metrics_cva_with_o.json`
-- `metrics_cva_without_o.json`
-- `confusion_matrix_bert_with_o.csv`
-- `confusion_matrix_cva_with_o.csv`
-- `comparison_summary.json`
-- `bio_validation_warnings.txt`
-
-### 3. Reuse a saved model checkpoint
-
-If `--skip-bert-train` is set and `--output-dir` already contains a Hugging Face checkpoint, the script reuses that checkpoint for evaluation:
+Quick smoke test:
 
 ```bash
-python scripts/train_ner.py --train-file data/full_train.conll --eval-file data/full_eval.conll --output-dir outputs/bert-ner-full --results-dir results/model_comparison_full --skip-bert-train
+python scripts/train_ner.py \
+    --train-file data/_smoke_train.conll \
+    --eval-file data/_smoke_eval.conll \
+    --output-dir outputs/bert-ner-smoke \
+    --results-dir results/model_comparison_smoke
 ```
 
-## Embedding analysis and visualization
-
-Use the provided embedding analysis pipeline to extract contextual embeddings, compute class vectors (mean or CVA), and produce PCA/t-SNE/UMAP visualizations suitable for thesis figures.
-
-Run the pipeline:
+### 3. 4-fold cross-validation (BERT)
 
 ```bash
-python scripts/run_embedding_analysis.py --model-name dbmdz/bert-base-turkish-cased --output-dir results/embedding_analysis --use-cva
+python scripts/run_cross_validation.py \
+    --data-file data/full_train.conll \
+    --model-name dbmdz/bert-base-turkish-cased \
+    --output-dir results/cv_full
 ```
 
-Outputs (saved under the `--output-dir`):
+Outputs per-fold metrics under `results/cv_full/fold_N/` and aggregated `cv_summary.json`.
 
-- `train_embeddings.csv`, `train_embeddings.npy` — token-level extracted embeddings for the training split
-- `eval_embeddings.csv`, `eval_embeddings.npy` — token-level extracted embeddings for the evaluation split
-- `class_vectors.json` — class mean or CVA common vectors
-- `pca_embeddings.png`, `pca_embeddings_3d.png`, `tsne_embeddings.png`, `umap_embeddings.png` — visualizations
-- `classification_report.json`, `confusion_matrix.png`, `metrics_summary.csv` — evaluation artifacts
+### 4. CRF baseline (4-fold)
 
-See `notebooks/embedding_visualization.ipynb` for a notebook-based reproduction of the PCA steps and quick inspection.
+```bash
+python scripts/run_crf_baseline.py \
+    --data-file data/full_train.conll \
+    --output-dir results/crf_full
+```
 
-If no loadable checkpoint exists in `--output-dir`, the script falls back to `--model-name`.
+Outputs the same per-fold structure and `crf_cv_summary.json`.
+
+### 5. Embedding extraction, CVA, and visualization
+
+```bash
+python scripts/run_embedding_analysis.py \
+    --train data/full_train.conll \
+    --eval data/full_eval.conll \
+    --model-name dbmdz/bert-base-turkish-cased \
+    --output-dir results/embedding_full \
+    --use-cva
+```
+
+Outputs: `train_embeddings.{csv,npy}`, `eval_embeddings.{csv,npy}`, `class_vectors.json`, PCA/t-SNE/UMAP plots, `pca_explained_variance.txt`, `classification_report.json`.
+
+### 6. Context-only vs CVA vs Combined comparison
+
+```bash
+python scripts/compare_context_cva.py \
+    --train-file data/full_train.conll \
+    --eval-file data/full_eval.conll \
+    --output-dir results/compare_full
+```
+
+Outputs sub-directories `context_only/`, `cva_only/`, `combined/` each with a `classification_report.json`, plus `comparison_summary.json`.
+
+### 7. OOV entity experiment (top-3 retrieval)
+
+```bash
+python scripts/oov_experiment.py \
+    --train-file data/full_train.conll \
+    --eval-file data/full_eval.conll \
+    --output-dir results/oov_full
+```
+
+Outputs `oov_results.csv` (token, gold label, top-1, top-3 predictions with scores) and `oov_summary.json`.
+
+### 8. Prototype visualization and nearest-neighbor listing
+
+```bash
+python scripts/generate_prototype_visuals.py --out-dir results/embedding_full
+```
+
+Outputs `prototypes_pca.png` and `prototype_neighbors.json` (top-10 nearest tokens per class prototype).
+
+### 9. Thesis-ready report (Markdown + LaTeX)
+
+```bash
+python scripts/generate_thesis_summary.py \
+    --cv-dir results/cv_full \
+    --crf-dir results/crf_full \
+    --compare-dir results/compare_full \
+    --bert-cva-dir results/model_comparison_full_cleaned \
+    --oov-dir results/oov_full \
+    --embed-dir results/embedding_full \
+    --out-dir results/thesis_report
+```
+
+Outputs `thesis_report.md` and `thesis_report.tex` with all result tables.
 
 ## Pipeline Explanation
 
 1. Read CoNLL BIO annotations from the train and evaluation files.
 2. Validate BIO labels and normalize label sequences.
-3. Build the label map shared by BERT and CVA.
+3. Build the label map shared by BERT, CRF, and CVA.
 4. Tokenize sentences and align labels to the first subtoken of each word.
 5. Fine-tune a transformer token-classification model, or load an existing checkpoint when requested.
 6. Extract token embeddings from the same transformer backbone.
-7. Build CVA class vectors from aligned training embeddings.
-8. Predict evaluation labels with both BERT and CVA.
-9. Compute precision, recall, F1, accuracy, and confusion matrices.
-10. Measure sentence-level inference speed for BERT and CVA.
-11. Save metrics, warnings, timing summaries, and CSV/JSON outputs for later reporting.
+7. Build CVA class vectors (mean or common vectors) from aligned training embeddings.
+8. Predict evaluation labels with BERT, CRF, and CVA.
+9. Compute precision, recall, F1, accuracy, and confusion matrices (full and top-N frequent labels).
+10. Save metrics, warnings, timing summaries, and CSV/JSON outputs for later reporting.
 
 ## Methods
 
 ### BERT-based NER
 
-The BERT pipeline fine-tunes a transformer model for token classification using first-subtoken alignment. Only the first subtoken of each word contributes to the training labels, which keeps the token-level BIO supervision consistent with the underlying word segmentation.
-
-Default training settings are exposed through command-line arguments, including model name, learning rate, batch size, number of epochs, maximum sequence length, and seed.
-
-Example defaults used by the script:
+The BERT pipeline fine-tunes a transformer model for token classification using first-subtoken alignment. Default training settings:
 
 - Model: `dbmdz/bert-base-turkish-cased`
 - Learning rate: `2e-5`
-- Train batch size: `8`
-- Eval batch size: `8`
+- Batch size: `8`
 - Epochs: `3`
 - Seed: `42`
 
+### CRF Baseline
+
+A linear-chain CRF with handcrafted lexical features (word form, capitalization, digit, context window). Trained on the same 4-fold splits as BERT for a fair comparison.
+
 ### Common Vector Approach (CVA)
 
-CVA uses transformer embeddings as a shared representation space. The pipeline:
-
-1. Extracts embeddings for aligned words.
-2. Aggregates training embeddings by BIO label.
-3. Computes class vectors from those label groups.
-4. Classifies each evaluation embedding by cosine similarity to the class vectors.
-
-This provides a lightweight similarity-based alternative to the fine-tuned classifier and makes inference speed comparable on the same data split.
+CVA uses the transformer backbone as a shared embedding extractor. Training embeddings are grouped by BIO label. For each class, the SVD of the centered embedding matrix is used to project the class mean onto the orthogonal complement of the within-class variance subspace, producing a stable class prototype. Evaluation embeddings are classified by cosine similarity to these prototypes.
 
 ## Evaluation
 
-The project reports the following evaluation artifacts:
-
-- Precision, recall, and F1-score.
-- Macro and per-class metrics, with and without the `O` label.
-- Confusion matrices for BERT and CVA predictions.
-- Sentence-level inference timing for both methods.
-
-The main evaluation outputs are written to `results/model_comparison_*` as JSON and CSV files so that they can be reused in tables or figures for a paper.
-
-### Confusion Matrix
-
-Confusion matrices are exported as CSV files and preserve the label order used during evaluation. They are intended for error analysis, per-entity failure inspection, and publication figures.
-
-### Speed Comparison
-
-The pipeline measures average and total sentence inference time for both BERT and CVA. This is useful for comparing the practical cost of a fine-tuned classifier versus a similarity-based method.
+All experiments report precision, recall, and F1-score at the macro level, together with per-class breakdowns. Confusion matrices are saved for the full label set and for the top-N most frequent labels separately. 4-fold cross-validation results include per-fold values and mean±std aggregates.
 
 ## Results Summary
 
-The repository includes example corpus statistics in `results_example/stats.json`.
+Full-data experiment outcomes:
 
-Observed summary from the example results:
+| Experiment | Metric | Value |
+| --- | --- | --- |
+| BERT 4-fold CV | Accuracy (mean ± std) | 0.7824 ± 0.0074 |
+| BERT 4-fold CV | Macro F1 (mean ± std) | 0.0340 ± 0.0121 |
+| CRF 4-fold CV | Macro F1 (mean ± std) | 0.3138 ± 0.0211 |
+| OOV experiment | OOV entity tokens | 235 |
+| Context-only | Accuracy | 0.3294 |
+| CVA-only | Accuracy | 0.0167 |
+| Combined | Accuracy | 0.0302 |
 
-- Total document folders: 130
-- Annotated documents: 34
-- Unannotated documents: 96
-- Total sentences: 1142
-- Sentences with entity: 980
-- Entity sentence ratio: 0.8581
-- Total tokens: 29195
-- BIO labels: 161
-- Entity types: 97
-- Average sentence length: 25.56 tokens
-
-The repository also includes example CSV outputs for label and type counts in `results_example/`.
-
-The full-data score summaries are now available in `results/` and are reflected in the report files and tables above. Use those generated outputs when preparing the final manuscript.
+Corpus statistics (from `results_example/stats.json`): 130 document folders, 34 annotated, 1,142 sentences, 29,195 tokens, entity-sentence ratio 0.8581, 161 BIO labels, 97 entity types.
 
 ## Scientific Contribution
 
-This repository contributes a reusable experimental pipeline for Turkish ENER research by combining corpus analysis, model training, and similarity-based classification in one codebase. It is useful for:
-
-- documenting the structure of a custom extended NER tagset,
-- validating annotation quality before modeling,
-- benchmarking BERT against a CVA baseline under the same BIO evaluation protocol,
-- and producing analysis artifacts that can be directly reused in a research paper.
+This repository contributes a reusable experimental pipeline for Turkish ENER research: corpus analysis, BERT and CRF training, CVA similarity classification, OOV/top-k retrieval, and a thesis-ready report generator — all operating on the same BIO-aligned evaluation protocol.
 
 ## Future Work
 
-- Package the measured results into final thesis tables and figure captions.
-- Document the dataset provenance, split policy, and annotation guidelines.
-- Add multi-seed evaluation and significance testing.
-- Expand the repository with character-level boundary detection experiments.
-- Add contrastive learning and augmentation experiments mentioned in the project goals.
+- Document dataset provenance, split policy, and annotation guidelines.
 - Add a license file before public release.
-
-## New scripts (cross-validation, CRF baseline, OOV, comparisons)
-
-The repository now includes additional scripts to support cross-validation and expanded experiments:
-
-- 4-fold cross-validation (BERT):
-
-```bash
-python scripts/run_cross_validation.py --data-file data/full_train.conll --model-name dbmdz/bert-base-turkish-cased --output-dir results/cross_validation
-```
-
-- CRF baseline (k-fold):
-
-```bash
-python scripts/run_crf_baseline.py --data-file data/full_train.conll --output-dir results/crf_baseline
-```
-
-- OOV/top-3 retrieval experiment:
-
-```bash
-python scripts/oov_experiment.py --train-file data/full_train.conll --eval-file data/full_eval.conll --output-dir results/oov_experiment
-```
-
-- Context-only vs CVA vs Combined comparison:
-
-```bash
-python scripts/compare_context_cva.py --train-file data/full_train.conll --eval-file data/full_eval.conll --output-dir results/context_vs_cva
-```
-
-These scripts reuse the existing utilities under `ner_stats/` and write per-experiment outputs to the specified `--output-dir`.
-
-## Manuscript-Style Methods and Results
-
-### Methods
-
-We developed an end-to-end Turkish Extended Named Entity Recognition (ENER) pipeline that combines corpus analysis, sequence labeling, and similarity-based classification. The input data are stored in CoNLL format and parsed from INCEpTION-style annotation folders. Before modeling, BIO labels are validated and normalized, and a shared label map is constructed so that both the supervised and similarity-based approaches operate on the same tag space.
-
-For the supervised baseline, we fine-tune a transformer-based token classification model with first-subtoken alignment. In this setup, each word contributes only its first subtoken to the training objective, which preserves word-level BIO supervision while remaining compatible with subword tokenization. The model is trained with configurable hyperparameters, including learning rate, batch size, sequence length, epoch count, and random seed. Evaluation is performed on a held-out split and reported using precision, recall, F1-score, and a confusion matrix.
-
-To provide a lightweight alternative, we implement a Common Vector Approach (CVA) classifier. The same transformer backbone is used as an embedding extractor, and aligned word embeddings are grouped by BIO label to compute class vectors. At inference time, each embedding is assigned to the nearest class vector by cosine similarity. This produces a direct comparison between fine-tuned classification and a similarity-based baseline under a shared evaluation protocol.
-
-In addition to modeling, the pipeline computes corpus-level statistics and quality-control reports. These include counts of documents, sentences, tokens, entity-bearing sentences, BIO labels, and entity types, together with plots showing entity frequency, entity-to-sentence ratio, and sentence-length distributions. The tagset is checked against the canonical ENER tagset to identify unused labels and types that are not covered by the reference schema.
-
-### Results
-
-The repository includes example corpus statistics in `results_example/stats.json`. In that summary, the corpus contains 130 document folders, of which 34 are annotated and 96 are unannotated. The annotated portion comprises 1,142 sentences and 29,195 tokens. Entities appear in 980 sentences, corresponding to an entity-sentence ratio of 0.8581. The corpus contains 161 BIO labels, 97 distinct entity types, and an average sentence length of 25.56 tokens.
-
-The full-data experiments are also available now:
-
-- 4-fold BERT cross-validation on `data/full_train.conll`: accuracy `0.7824 ± 0.0074`, macro F1 `0.0340 ± 0.0121`.
-- 4-fold CRF cross-validation on `data/full_train.conll`: macro F1 `0.3138 ± 0.0211`.
-- OOV experiment on `data/full_eval.conll`: `235` OOV items identified.
-- Context vs CVA comparison on `data/full_eval.conll`:
-	- context-only: accuracy `0.3294`, macro F1 `0.0931`
-	- CVA-only: accuracy `0.0167`, macro F1 `0.0243`
-	- combined: accuracy `0.0302`, macro F1 `0.0317`
-
-The analysis pipeline also generates label-frequency and type-frequency tables, together with plots for entity distribution and sentence-length variation. These outputs provide a descriptive overview of the dataset and support corpus inspection before model training.
-
-The BERT-versus-CVA evaluation pipeline is fully implemented and exports precision, recall, F1-score, confusion matrices, and inference-time summaries for both methods. The repository now also includes fold-level confusion matrices, the CRF baseline, and the full OOV/context-vs-CVA comparisons needed for the thesis write-up.
+- Expand character-level and contrastive learning experiments with systematic hyperparameter search.
 
 ## License
 

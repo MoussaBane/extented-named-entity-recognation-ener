@@ -8,5 +8,6 @@ numpy
 accelerate>=1.1.0
 protobuf
 sentencepiece
+scikit-learn
 sklearn-crfsuite
 scipy

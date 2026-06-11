@@ -123,12 +123,36 @@ def main():
 
         fold_metrics.append(metrics)
 
-    # aggregate
-    macro_f1s = [float(m.get("macro_f1", 0.0)) for m in fold_metrics]
+    # aggregate — build rich folds+aggregates structure (mirrors run_cross_validation.py)
+    folds_data = []
+    for fold_idx, m in enumerate(fold_metrics):
+        folds_data.append({
+            "fold": fold_idx,
+            "accuracy": float(m.get("accuracy", 0.0)),
+            "macro_f1": float(m.get("macro_f1", 0.0)),
+            "macro_precision": float(m.get("macro_precision", 0.0)),
+            "macro_recall": float(m.get("macro_recall", 0.0)),
+            "support": float(m.get("support", 0)),
+        })
+
+    def _agg(key):
+        vals = [f[key] for f in folds_data]
+        return {"mean": float(np.mean(vals)), "std": float(np.std(vals, ddof=0))}
+
     summary = {
+        "num_folds_found": len(folds_data),
+        "folds": folds_data,
+        "aggregates": {
+            "accuracy": _agg("accuracy"),
+            "macro_f1": _agg("macro_f1"),
+            "macro_precision": _agg("macro_precision"),
+            "macro_recall": _agg("macro_recall"),
+            "support": _agg("support"),
+        },
+        # flat aliases for backward compatibility
         "num_folds": args.num_folds,
-        "macro_f1_mean": float(np.mean(macro_f1s)) if macro_f1s else 0.0,
-        "macro_f1_std": float(np.std(macro_f1s, ddof=0)) if macro_f1s else 0.0,
+        "macro_f1_mean": float(np.mean([f["macro_f1"] for f in folds_data])),
+        "macro_f1_std": float(np.std([f["macro_f1"] for f in folds_data], ddof=0)),
     }
 
     with open(os.path.join(args.output_dir, "crf_cv_summary.json"), "w", encoding="utf-8") as f:
