@@ -1,0 +1,147 @@
+% ============================================================
+% Thesis Final Tables — paste individual tables into your manuscript.
+% Requires: booktabs, multirow (optional), siunitx (optional).
+% ============================================================
+
+% ------------------------------------------------------------------
+% Table 1 — Corpus Statistics
+% ------------------------------------------------------------------
+\begin{table}[ht]
+\centering
+\caption{Corpus statistics for the annotated Turkish ENER dataset.}
+\label{tab:corpus_stats}
+\begin{tabular}{lr}
+\toprule
+Statistic & Value \\
+\midrule
+Total annotation folders & 130 \\
+Annotated documents & 34 \\
+Unannotated documents & 96 \\
+Total sentences & 1{,}142 \\
+Sentences with $\geq$1 entity & 980 \\
+Entity--sentence ratio & 0.858 \\
+Total tokens & 29{,}195 \\
+Average sentence length (tokens) & 25.6 \\
+Distinct entity types & 97 \\
+BIO labels in use & 161 \\
+Raw BIO violations & 3{,}444 \\
+BIO violations after normalisation & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------------
+% Table 2 — Main Evaluation Results
+% ------------------------------------------------------------------
+\begin{table}[ht]
+\centering
+\caption{Token-level evaluation on the full held-out split (107 sentences, 184 labels).
+``w/o O'' excludes the outside label from macro averaging.
+All fine-tuned models use \texttt{dbmdz/bert-base-turkish-cased}.}
+\label{tab:main_results}
+\begin{tabular}{lccc}
+\toprule
+Method & Accuracy & Macro F1 (w/ O) & Macro F1 (w/o O) \\
+\midrule
+BERT token classifier (seed 42) & 0.748 & 0.021 & 0.026 \\
+CVA cosine classifier (seed 42) & 0.021 & 0.014 & 0.018 \\
+Context-only baseline & 0.329 & 0.093 & 0.093 \\
+CVA-only baseline & 0.017 & 0.024 & 0.024 \\
+Context + CVA combined & 0.030 & 0.032 & 0.032 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------------
+% Table 3 — Cross-Validation Results
+% ------------------------------------------------------------------
+\begin{table}[ht]
+\centering
+\caption{4-fold cross-validation on the full training split (1{,}035 sentences).
+Standard deviations use the sample estimator ($n-1$).}
+\label{tab:cv_results}
+\begin{tabular}{lcc}
+\toprule
+Method & Accuracy & Macro F1 \\
+\midrule
+BERT (4-fold) & $0.7824 \pm 0.0074$ & $0.0340 \pm 0.0121$ \\
+CRF (4-fold)  & --                   & $0.3138 \pm 0.0211$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------------
+% Table 3a — BERT Per-Fold Details
+% ------------------------------------------------------------------
+\begin{table}[ht]
+\centering
+\caption{Per-fold BERT results (4-fold CV, full training data).}
+\label{tab:bert_fold_details}
+\begin{tabular}{crrc}
+\toprule
+Fold & Accuracy & Macro F1 & Support (tokens) \\
+\midrule
+0 & 0.7834 & 0.0173 & 6{,}398 \\
+1 & 0.7732 & 0.0344 & 5{,}709 \\
+2 & 0.7912 & 0.0459 & 6{,}505 \\
+3 & 0.7819 & 0.0382 & 6{,}299 \\
+\midrule
+Mean $\pm$ std & $0.7824 \pm 0.0074$ & $0.0340 \pm 0.0121$ & $6{,}228 \pm 326$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------------
+% Table 4 — Inference Speed
+% ------------------------------------------------------------------
+\begin{table}[ht]
+\centering
+\caption{Inference speed on the full evaluation split (107 sentences, CPU).
+CVA time includes embedding extraction and per-token cosine lookup.
+Warmup sentences are excluded.}
+\label{tab:inference_speed}
+\begin{tabular}{lccc}
+\toprule
+Method & Avg.\ per sentence (s) & Total (s) & Relative speed \\
+\midrule
+BERT token classifier & 0.0666 & 7.13  & $1.0\times$ \\
+CVA cosine classifier & 0.1904 & 20.38 & $2.86\times$ slower \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------------
+% Table 5 — OOV Analysis
+% ------------------------------------------------------------------
+\begin{table}[ht]
+\centering
+\caption{Out-of-vocabulary analysis on the full evaluation split.
+OOV surfaces are word forms that appear in evaluation but not in training.}
+\label{tab:oov}
+\begin{tabular}{lr}
+\toprule
+Statistic & Value \\
+\midrule
+OOV token surfaces (unseen in training vocabulary) & 235 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------------
+% Table 6 — Context vs. CVA Ablation
+% ------------------------------------------------------------------
+\begin{table}[ht]
+\centering
+\caption{Context-only vs.\ CVA-only vs.\ combined scoring ablation
+on the full evaluation split (1{,}855 tokens after word-level alignment).}
+\label{tab:context_cva_ablation}
+\begin{tabular}{lcccc}
+\toprule
+Method & Accuracy & Macro Prec. & Macro Recall & Macro F1 \\
+\midrule
+Context-only & 0.329 & 0.103 & 0.142 & 0.093 \\
+CVA-only     & 0.017 & 0.038 & 0.058 & 0.024 \\
+Combined     & 0.030 & 0.030 & 0.098 & 0.032 \\
+\bottomrule
+\end{tabular}
+\end{table}

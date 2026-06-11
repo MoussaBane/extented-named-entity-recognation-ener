@@ -516,6 +516,143 @@ Uzun vadeli (yayın & dağıtım):
 
 ---
 
+## 22.a Güncelleme: Tam Deneyler, Sonuçlar ve Artefaktlar (2026-06-07)
+
+Aşağıda depo içinde tamamlanmış tam deneylerin kısa bir özeti, önemli çıktı dosyalarının konumları ve yeniden üretme komutları verilmiştir.
+
+- BERT (4-fold CV): doğruluk $0.7824\pm0.0074$, token-macro F1 $0.0340\pm0.0121$ — sonuçlar ve per-fold artefaktlar:
+  - `results/cv_full/fold_0/` .. `results/cv_full/fold_3/` (model checkpoint'leri, `metrics_summary.csv`, `confusion_matrix.csv`)
+  - toplu özet: `results/cv_full/cv_summary.json`
+
+- CRF (4-fold CV): token-macro F1 $0.3138\pm0.0211$ — sonuçlar:
+  - `results/crf_full/` ve `results/crf_full/crf_cv_summary.json`
+
+- OOV analizi (eval set): toplam `235` benzersiz yüzey formu tespit edildi:
+  - çıktı: `results/oov_full/oov_results.csv`, `results/oov_full/oov_summary.json`
+
+- Context vs CVA karşılaştırması (eval split):
+  - `results/compare_full/*/metrics_summary.csv` — öne çıkan değerler: context-only accuracy `0.3294`, macro F1 `0.0931`; CVA-only accuracy `0.0167`, macro F1 `0.0243`; combined macro F1 `0.0317`.
+
+- Yeni/önemli betikler ve yardımcılar:
+  - `scripts/run_cross_validation.py` — BERT 4-fold CV
+  - `scripts/run_crf_baseline.py` — CRF k-fold
+  - `scripts/aggregate_cv_results.py` — per-fold özetleme
+  - `scripts/watch_cv_progress.py` — CV tamamlanmasını izleyip toplama tetikler
+  - `scripts/trigger_post_experiments.py` — CRF/CV tamamlandıktan sonra OOV/CVA işleri tetikler
+  - `scripts/oov_experiment.py`, `scripts/compare_context_cva.py` — OOV ve prototip karşılaştırmaları
+  - `ner_stats/cva.py` — `top_k_cosine_similarities` yardımcı fonksiyonu eklendi
+
+- Seri hale getirilebilirlik / düzeltmeler:
+  - JSON serileştirme iyileştirmeleri: `to_jsonable` yardımcıları `np.ndarray` ve `np.generic` türlerini dönüştürecek şekilde güncellendi.
+  - BERT CV: `DataCollatorForTokenClassification` ile alttoken pad/stack hataları giderildi.
+
+- Raporlar ve tablo dosyaları:
+  - `reports/thesis_results_table.md` (tez için markdown tablosu)
+  - `reports/thesis_results_table.tex` (LaTeX tablo)
+  - `reports/project_audit.md`, `reports/final_gap_analysis.md`, `reports/supervisor_requirements_checklist.md` (audit & gereksinim kontrolleri)
+
+Yeniden üretme (örnek komutlar; venv kullanınız):
+
+```bash
+# Activate venv (PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# CRF 4-fold
+.venv\Scripts\python.exe -m scripts.run_crf_baseline --data-file data/full_train.conoll --output-dir results/crf_full --num-folds 4
+
+# BERT 4-fold CV (embedder + Trainer)
+.venv\Scripts\python.exe -m scripts.run_cross_validation --data-file data/full_train.conoll --model-name dbmdz/bert-base-turkish-cased --output-dir results/cv_full --num-folds 4
+
+# Aggregate CV results
+.venv\Scripts\python.exe -m scripts.aggregate_cv_results --results-dir results/cv_full --num-folds 4
+
+# Trigger post experiments (watcher will call these automatically if configured)
+.venv\Scripts\python.exe -m scripts.trigger_post_experiments --cv-dir results/cv_full --crf-dir results/crf_full --num-folds 4
+```
+
+Not: tüm alt-proses çağrıları `sys.executable` / aktif venv interpreter ile çalıştırılmalıdır; aksi takdirde `ModuleNotFoundError` veya farklı bağımlılık sorunları oluşabilir.
+
+Bu güncelleme proje raporunu ve README içindeki rehberi deneylerin tam kümesi ile tutarlı hale getirir. Aşağıdaki adımlardan hangisini istersiniz: (a) `results/` artefaktlarını paketleyip bir sürüm oluşturayım, (b) hafif bir GitHub Actions CI iş akışı ekleyeyim (smoke tests), veya (c) başka raporlar/şekiller ekleyeyim?
+
+## 22.b Güncelleme: Tez Tabloları, Çoklu-Tohum Değerlendirmesi ve Yeni Modeller (2026-06-12)
+
+### Tez Final Tabloları
+
+`reports/thesis_final_tables.md` ve `reports/thesis_final_tables.tex` dosyaları güncellendi.
+Tüm tamamlanmış deneylere ait kapsamlı tablolar aşağıdakileri içermektedir:
+
+- **Tablo 1**: Korpus istatistikleri
+- **Tablo 2**: Ana değerlendirme sonuçları (tam bölme, 107 cümle)
+- **Tablo 3 / 3a**: 4-fold çapraz doğrulama özeti ve per-fold detaylar
+- **Tablo 4**: Çıkarım hızı karşılaştırması (BERT: 0.0666 s/cümle, CVA: 0.1904 s/cümle)
+- **Tablo 5**: OOV analizi (235 görülmemiş yüzey formu)
+- **Tablo 6**: Context-only / CVA-only / combined ablasyon
+- Tüm görseller için **şekil altyazıları** (Figure 1–4)
+
+### Çoklu-Tohum Değerlendirmesi ve İstatistiksel Anlamlılık
+
+**Yeni betik:** `scripts/run_multi_seed.py`
+
+Birden fazla rastgele tohumla (varsayılan: `[42, 123, 456, 789, 1234]`) BERT ve CVA'yı çalıştırır; ortalama ± std raporlar ve iki istatistiksel test uygular:
+
+1. **Eşleştirilmiş t-testi** (tohumlar boyunca): BERT makro-F1 dağılımının CVA'dan anlamlı biçimde farklı olup olmadığını test eder.
+2. **Eşleştirilmiş bootstrap testi** (son tohumun tahminleri üzerinde): cümle düzeyinde yeniden örnekleme ile tek taraflı p-değeri hesaplar.
+
+```bash
+python scripts/run_multi_seed.py \
+    --train-file data/full_train.conll \
+    --eval-file  data/full_eval.conll  \
+    --seeds 42 123 456 789 1234        \
+    --output-dir results/multi_seed
+```
+
+Çıktılar `results/multi_seed/multi_seed_summary.json` dosyasına kaydedilir.
+
+### Karakter-Düzey Sınır Tespiti (CharBERT)
+
+**Yeni modül:** `ner_stats/char_features.py` — `CharCNNEncoder`, `build_char_vocab`, `words_to_char_ids`
+
+**Yeni betik:** `scripts/run_char_ner.py`
+
+Mimari:
+
+- Her kelime için BERT'in ilk-alttoken gömüsü ile paralel 1-D evrişimli karakter CNN çıktısı birleştirilir.
+- Birleştirilmiş temsil doğrudan token sınıflandırma başlığına aktarılır.
+- Türkçenin birleşik morfolojisinden kaynaklanan OOV sorunu ve sınır belirsizliği için özellikle uygundur.
+
+```bash
+python scripts/run_char_ner.py \
+    --train-file data/full_train.conll \
+    --eval-file  data/full_eval.conll  \
+    --output-dir results/char_ner_full
+```
+
+### Denetimli Kontrastif NER (ContrastiveBERT)
+
+**Yeni modül:** `ner_stats/contrastive.py` — `SupConLoss`, `ProjectionHead`
+
+**Yeni betik:** `scripts/run_contrastive_ner.py`
+
+Kayıp fonksiyonu:
+
+$$L = (1 - \lambda) \cdot \mathrm{CE}(f_\mathrm{cls}(h)) + \lambda \cdot \mathrm{SupCon}(f_\mathrm{proj}(h))$$
+
+- $f_\mathrm{cls}$: doğrusal sınıflandırma başlığı (çıkarım için kullanılır).
+- $f_\mathrm{proj}$: 2-katmanlı MLP projeksiyon başlığı (yalnızca eğitimde kullanılır, L2-normalleştirilmiş çıktı).
+- $\lambda$ (`--contrastive-lambda`, varsayılan 0.1): kontrastif kaybın ağırlığı.
+
+Aynı sınıftan tokenlar kontrastif uzayda birbirine çekilir; bu özellikle uzun kuyruklu nadir sınıflar için yararlıdır.
+
+```bash
+python scripts/run_contrastive_ner.py \
+    --train-file data/full_train.conll \
+    --eval-file  data/full_eval.conll  \
+    --contrastive-lambda 0.1           \
+    --output-dir results/contrastive_ner_full
+```
+
+---
+
 ## 23. Atıf
 
 Bu kodu veya veri setini araştırmalarınızda kullanırsanız, lütfen depoyu ve ENER veri setini referans verin. (Bir DOI veya resmi referans hazır olduğunda atıf bloğunu ekleyin.)

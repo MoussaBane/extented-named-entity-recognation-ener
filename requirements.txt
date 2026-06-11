@@ -9,3 +9,4 @@ accelerate>=1.1.0
 protobuf
 sentencepiece
 sklearn-crfsuite
+scipy

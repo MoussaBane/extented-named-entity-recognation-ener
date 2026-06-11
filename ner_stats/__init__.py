@@ -11,6 +11,8 @@ from .cva import (
 	compute_class_mean_vectors,
 	compute_cva_common_vectors,
 )
+from .char_features import build_char_vocab, words_to_char_ids, CharCNNEncoder
+from .contrastive import SupConLoss, ProjectionHead
 
 __all__ = [
 	"set_global_seed",
@@ -27,4 +29,9 @@ __all__ = [
 	"compute_cva_common_vectors",
 	"classify_embedding_by_cosine_similarity",
 	"classify_sentence_tokens_by_cosine_similarity",
+	"build_char_vocab",
+	"words_to_char_ids",
+	"CharCNNEncoder",
+	"SupConLoss",
+	"ProjectionHead",
 ]
