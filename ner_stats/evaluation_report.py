@@ -69,11 +69,45 @@ def save_confusion_matrix_plot(confusion: np.ndarray, labels: Sequence[str], out
     plt.close(fig)
 
 
-def generate_reports(true_seqs: Sequence[Sequence[str]], pred_seqs: Sequence[Sequence[str]], out_dir: str):
+def save_top_n_confusion_matrix(metrics: Dict, top_n: int, out_dir: str) -> None:
+    """Save confusion matrix and plot restricted to the top-N most frequent labels (by support)."""
+    per_class = metrics.get("per_class", {})
+    all_labels = metrics.get("labels", [])
+    full_cm = np.asarray(metrics["confusion_matrix"])
+
+    # rank labels by support descending, filtering to those present in label list
+    label_support = [(lbl, per_class.get(lbl, {}).get("support", 0)) for lbl in all_labels]
+    label_support.sort(key=lambda x: -x[1])
+    top_labels = [lbl for lbl, _ in label_support[:top_n]]
+
+    # extract sub-matrix indices
+    label_index = {lbl: i for i, lbl in enumerate(all_labels)}
+    indices = [label_index[lbl] for lbl in top_labels if lbl in label_index]
+    if not indices:
+        return
+
+    sub_cm = full_cm[np.ix_(indices, indices)]
+
+    os.makedirs(out_dir, exist_ok=True)
+    np.savetxt(
+        os.path.join(out_dir, f"confusion_matrix_top{top_n}.csv"),
+        sub_cm,
+        fmt="%d",
+        delimiter=",",
+        header=",".join(top_labels),
+        comments="",
+    )
+    save_confusion_matrix_plot(
+        sub_cm, top_labels,
+        os.path.join(out_dir, f"confusion_matrix_top{top_n}.png"),
+    )
+
+
+def generate_reports(true_seqs: Sequence[Sequence[str]], pred_seqs: Sequence[Sequence[str]], out_dir: str, top_n: int = 20):
     os.makedirs(out_dir, exist_ok=True)
     metrics = evaluate_token_classification(true_seqs, pred_seqs)
     save_json(metrics, os.path.join(out_dir, "classification_report.json"))
-    # save confusion matrix CSV
+    # save full confusion matrix CSV
     np.savetxt(os.path.join(out_dir, "confusion_matrix.csv"), metrics["confusion_matrix"], fmt="%d", delimiter=",")
     # save human-friendly per-class CSV
     import csv
@@ -86,4 +120,7 @@ def generate_reports(true_seqs: Sequence[Sequence[str]], pred_seqs: Sequence[Seq
 
     save_metrics_summary(metrics, os.path.join(out_dir, "metrics_summary.csv"))
     save_confusion_matrix_plot(metrics["confusion_matrix"], metrics["labels"], os.path.join(out_dir, "confusion_matrix.png"))
+    # save top-N frequent labels confusion matrix (Req C)
+    if top_n and len(metrics.get("labels", [])) > top_n:
+        save_top_n_confusion_matrix(metrics, top_n, out_dir)
     return metrics

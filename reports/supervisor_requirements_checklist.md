@@ -3,80 +3,108 @@
 This checklist verifies the supervisor's requested features against the current codebase and gives recommended actions.
 
 Requirement A: 4-fold cross validation
-- Implemented?: NO
-- Location: N/A
-- Recommended actions: Implement a k-fold orchestration module that reuses `scripts/train_ner.py` components (tokenization, dataset, Trainer) to train/evaluate on 4 folds. Save per-fold metrics and aggregated mean/std in `results/cross_validation/`.
+
+- Implemented?: YES
+- Location: `scripts/run_cross_validation.py` — full 4-fold BERT CV with deterministic seeds, per-fold model saving, and aggregated summary.
+- Recommended actions: None.
 
 Requirement B: Precision / Recall / F1 reporting per fold
-- Implemented?: NO
-- Location: Existing single-run reporting in `scripts/train_ner.py`, `ner_stats/evaluation.py`, `ner_stats/evaluation_report.py`
-- Recommended actions: Extend k-fold runner to call `evaluate_token_classification` per fold and save per-fold CSV/JSON plus aggregated stats (mean/std).
+
+- Implemented?: YES
+- Location: `scripts/run_cross_validation.py` saves `fold_N/metrics.json` (per_class precision/recall/F1) and `cv_summary.json` with macro mean±std across folds. `scripts/run_crf_baseline.py` does the same for CRF.
+- Recommended actions: None.
 
 Requirement C: Confusion matrices for most frequent labels
-- Implemented?: PARTIAL
-- Location: Confusion matrices saved for full label set by `scripts/train_ner.py` and `ner_stats/evaluation_report.py` (e.g., `results/model_comparison_*/confusion_matrix_bert_with_o.csv`).
-- Recommended actions: Add utility to compute label frequency (`ner_stats/statistics.py` already has counts) and script to compute confusion restricted to top-N frequent labels (save PNG & CSV).
+
+- Implemented?: YES
+- Location: `ner_stats/evaluation_report.py` — `generate_reports()` now calls `save_top_n_confusion_matrix(metrics, top_n=20, out_dir)` to save `confusion_matrix_top20.csv` and `confusion_matrix_top20.png` (top-20 labels by support) alongside the full confusion matrix.
+- Recommended actions: None. Adjust `top_n` argument in `generate_reports()` calls if a different count is needed.
 
 Requirement D: BERT baseline
+
 - Implemented?: YES
 - Location: `scripts/train_ner.py` (training and evaluation), `requirements.txt` references transformers.
-- Recommended actions: None — already present. For multi-fold ensure Trainer reuse and deterministic seeds.
+- Recommended actions: None.
 
 Requirement E: Alternative model comparison (CRF preferred)
-- Implemented?: NO
-- Location: N/A
-- Recommended actions: Add CRF baseline using `sklearn-crfsuite` or `sklearn_crfsuite` with same first-subtoken alignment as BERT. Ensure CRF uses same folds and save metrics and confusion matrices in `results/model_comparison_crf/`.
+
+- Implemented?: YES
+- Location: `scripts/run_crf_baseline.py` — CRF with sklearn-crfsuite, same 4-fold split as BERT, saves per-fold metrics and `crf_cv_summary.json`.
+- Recommended actions: None.
 
 Requirement F: Context vector extraction
+
 - Implemented?: YES
-- Location: `ner_stats/embeddings.py`, `ner_stats/embedding_analysis.py`, `scripts/run_embedding_analysis.py` (exports `.npy` and `.csv`).
-- Recommended actions: Ensure storage format includes item → (sent_idx, token_idx) mapping for OOV experiments (embedding CSV already contains metadata). Consider adding an HDF5 or memory-mapped `.npy` index for large corpora.
+- Location: `ner_stats/embeddings.py` (TransformerEmbedder), `ner_stats/embedding_analysis.py`, `scripts/run_embedding_analysis.py` (exports `.npy`, `.csv`, `class_vectors.json`).
+- Recommended actions: None.
 
 Requirement G: Common Vector Analysis (CVA)
+
 - Implemented?: YES
-- Location: `ner_stats/cva.py`, used in `scripts/run_embedding_analysis.py` and `scripts/train_ner.py`.
-- Recommended actions: Add top-K retrieval utilities and a documented API for producing common vectors per label (already available as `compute_cva_common_vectors`).
+- Location: `ner_stats/cva.py` (`compute_cva_common_vectors`), used in `scripts/run_embedding_analysis.py` and `scripts/train_ner.py`.
+- Recommended actions: None.
 
 Requirement H: Average label vectors from contextual embeddings
+
 - Implemented?: YES
-- Location: `ner_stats/cva.py` (`compute_class_mean_vectors`) and `ner_stats/embedding_analysis.py` (`build_class_vectors_from_records` uses mean/CVA selection).
-- Recommended actions: None — ensure these are exported (e.g., `class_vectors.json` is produced by `run_embedding_analysis.py`).
+- Location: `ner_stats/cva.py` (`compute_class_mean_vectors`) and `ner_stats/embedding_analysis.py` (`build_class_vectors_from_records` uses mean/CVA selection). `class_vectors.json` produced by `run_embedding_analysis.py`.
+- Recommended actions: None.
 
 Requirement I: Unknown entity classification
-- Implemented?: NO (PARTIAL support)
-- Location: Building blocks exist: embedding extraction + CVA classification in `scripts/run_embedding_analysis.py` and `ner_stats/cva.py`.
-- Recommended actions: Implement a routine that constructs an evaluation set of entities unseen during training and runs top-3 retrieval; save predictions and evaluation summary under `results/oov_experiment/`.
+
+- Implemented?: YES
+- Location: `scripts/oov_experiment.py` — finds entity tokens unseen during training, runs top-3 retrieval against CVA class vectors, saves `oov_results.csv` (sent_idx, token, gold, top1, top1_score, top3) and `oov_summary.json`.
+- Recommended actions: None.
 
 Requirement J: Top-3 nearest label prediction
-- Implemented?: NO (PARTIAL)
-- Location: `ner_stats/cva.classify_embedding_by_cosine_similarity` currently returns top-1 only.
-- Recommended actions: Add a `top_k_cosine_similarities` utility returning sorted (label, score) pairs; use it in OOV experiments and reporting.
+
+- Implemented?: YES
+- Location: `ner_stats/cva.top_k_cosine_similarities(embedding, class_vectors, k=3)` — returns sorted `(label, score)` list. Used in `scripts/oov_experiment.py`.
+- Recommended actions: None.
 
 Requirement K: Context-only classification experiment
-- Implemented?: PARTIAL
-- Location: BERT inference and CVA already implemented individually (`scripts/train_ner.py` compares BERT vs CVA). A dedicated "context-only" (embedding nearest-label without CVA prototypes) experiment is not explicitly implemented.
-- Recommended actions: Implement a context-only classifier that compares evaluation embeddings directly to label-average vectors or uses kNN on training embeddings (per-token) and save metrics.
+
+- Implemented?: YES
+- Location: `scripts/compare_context_cva.py` — "context_only" method uses mean class vectors (no CVA projection); produces `compare_dir/context_only/classification_report.json` and per-class metrics.
+- Recommended actions: None.
 
 Requirement L: CVA + Context classification experiment
-- Implemented?: NO
-- Location: N/A
-- Recommended actions: Implement a combined decision rule (e.g., weighted score between CVA prototype similarity and context-only classifier or concatenated features into a lightweight classifier). Run on same folds and report comparison.
+
+- Implemented?: YES
+- Location: `scripts/compare_context_cva.py` — "combined" method averages cosine scores from mean vectors (context) and CVA common vectors; produces `compare_dir/combined/classification_report.json`.
+- Recommended actions: None.
 
 Requirement M: Performance comparison between Context-only and CVA+Context
-- Implemented?: NO
-- Location: N/A
-- Recommended actions: After implementing K and L, run both experiments on same evaluation splits (or cross-validation folds) and produce comparative tables with accuracy/precision/recall/F1 and statistical summaries.
+
+- Implemented?: YES
+- Location: `scripts/compare_context_cva.py` produces `comparison_summary.json` with macro P/R/F1/accuracy for context_only, cva_only, and combined. `scripts/generate_thesis_summary.py` formats this as both Markdown and LaTeX tables.
+- Recommended actions: None.
 
 Requirement N: PCA visualization of entity embeddings
-- Implemented?: PARTIAL
-- Location: `scripts/run_embedding_analysis.py` produces PCA 2D/3D and t-SNE; `ner_stats/visualization.py` provides plotting functions including `plot_prototypes_2d` to overlay prototypes.
-- Recommended actions: Add an automated step to include CVA/mean prototypes in PCA plots and save explained variance text. Ensure figures are labeled and sized for thesis use.
+
+- Implemented?: YES
+- Location: `scripts/run_embedding_analysis.py` — produces PCA 2D/3D, t-SNE, and UMAP plots; `pca_embeddings_with_prototypes.png` overlays CVA/mean prototypes; `pca_explained_variance.txt` now saves explained variance ratios for all components.
+- Recommended actions: None.
 
 Requirement O: Thesis-ready tables and figures
-- Implemented?: PARTIAL
-- Location: The repository generates CSV/JSON and PNG outputs (`results/` and `results_example/`) but does not assemble formatted tables or figure captions.
-- Recommended actions: Create a `scripts/generate_thesis_reports.py` (or extend `scripts/generate_thesis_summary.py`) to ingest results and produce publication-ready markdown/LaTeX tables and figure files with captions and explained variance text.
+
+- Implemented?: YES
+- Location: `scripts/generate_thesis_summary.py` — comprehensive report generator. Accepts `--cv-dir`, `--crf-dir`, `--compare-dir`, `--bert-cva-dir`, `--oov-dir`, `--embed-dir`, `--out-dir`. Produces:
+  - `thesis_report.md` — Markdown tables for all experiments (BERT CV, CRF CV, BERT vs CVA, Context/CVA/Combined, top-10 per-class F1, OOV, embedding stats).
+  - `thesis_report.tex` — LaTeX `\begin{table}` blocks with `\toprule`/`\midrule`/`\bottomrule` for direct inclusion in a thesis.
+- Recommended actions: Run with full-data result dirs:
+
+  ```bash
+  python scripts/generate_thesis_summary.py \
+      --cv-dir results/cv_full \
+      --crf-dir results/crf_full \
+      --compare-dir results/compare_full \
+      --bert-cva-dir results/model_comparison_full_cleaned \
+      --oov-dir results/oov_full \
+      --embed-dir results/embedding_full \
+      --out-dir results/thesis_report
+  ```
 
 ---
 
-Summary: The repository contains a solid core: annotation parsing, BERT training, CVA, embedding extraction, evaluation and visualization. Missing items are primarily experimental orchestration (4-fold CV, per-fold reporting), a CRF baseline, explicit OOV/top-K experiments, and a few convenience/reporting utilities to produce thesis-ready artefacts.
+Summary: All supervisor requirements (A–O) are now fully implemented. The pipeline covers: 4-fold BERT CV (A, B), top-N frequent-label confusion matrices (C), BERT baseline (D), CRF baseline with 4-fold CV (E), context vector extraction (F), CVA (G, H), OOV/top-3 retrieval experiment (I, J), context-only and CVA+context classifiers with comparison (K, L, M), PCA/t-SNE visualizations with prototype overlay and explained variance (N), and a comprehensive thesis-ready Markdown + LaTeX report generator (O).

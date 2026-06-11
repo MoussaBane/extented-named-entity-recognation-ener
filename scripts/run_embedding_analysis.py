@@ -102,6 +102,10 @@ def main():
         # PCA 2D
         X2, pca = visualization.pca_reduce(X, n_components=2)
         visualization.plot_2d_scatter(X2, labels, os.path.join(args.output_dir, f"pca_embeddings.{args.plot_format}"), title="PCA 2D (eval)")
+        # save explained variance text (Req N)
+        ev_text = visualization.explained_variance_text(pca)
+        with open(os.path.join(args.output_dir, "pca_explained_variance.txt"), "w", encoding="utf-8") as _f:
+            _f.write(ev_text + "\n")
         # overlay prototypes (class vectors) if available
         try:
             visualization.plot_prototypes_2d(X2, labels, class_vectors, os.path.join(args.output_dir, f"pca_embeddings_with_prototypes.{args.plot_format}"), title="PCA 2D with Prototypes (eval)", pca=pca)
