@@ -28,6 +28,7 @@ def parse_args():
     p.add_argument("--bert-cva-dir", default="results/model_comparison_full_cleaned")
     p.add_argument("--oov-dir", default="results/oov_full")
     p.add_argument("--embed-dir", default="results/embedding_full")
+    p.add_argument("--attention-dir", default="results/attention_ner")
     p.add_argument("--out-dir", default="results/thesis_report")
     return p.parse_args()
 
@@ -339,6 +340,128 @@ def build_oov_section(oov_dir: str):
     return md, latex, None
 
 
+def build_attention_ner_section(attention_dir: str):
+    summary = load_json(os.path.join(attention_dir, "comparison_summary.json"))
+    if not summary:
+        return None, None, "*(AttentionNER results not found — run scripts/run_attention_ner.py)*"
+
+    wo = summary.get("without_O", {})
+    wi = summary.get("with_O", {})
+    config_rows = [
+        ["BERT base", summary.get("bert_base", "N/A")],
+        ["Attention head dim (d_head)", str(summary.get("d_head", "N/A"))],
+        ["Freeze BERT", str(summary.get("freeze_bert", "N/A"))],
+        ["Train sentences", str(summary.get("num_train_sentences", "N/A"))],
+        ["Eval sentences", str(summary.get("num_eval_sentences", "N/A"))],
+        ["Label count", str(summary.get("num_labels", "N/A"))],
+    ]
+    metric_rows = [
+        ["Macro Precision (w/o O)", fmt(wo.get("macro_precision"), 4)],
+        ["Macro Recall (w/o O)", fmt(wo.get("macro_recall"), 4)],
+        ["Macro F1 (w/o O)", fmt(wo.get("macro_f1"), 4)],
+        ["Accuracy (w/ O)", fmt(wi.get("accuracy"), 4)],
+        ["Macro F1 (w/ O)", fmt(wi.get("macro_f1"), 4)],
+    ]
+    all_rows = config_rows + [["---", "---"]] + metric_rows
+    headers = ["Parameter / Metric", "Value"]
+    md = md_table(headers, all_rows)
+
+    # per-label table from CSV if available
+    per_label_path = os.path.join(attention_dir, "per_label_report.csv")
+    if os.path.exists(per_label_path):
+        import csv
+        label_rows = []
+        try:
+            with open(per_label_path, encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    if row.get("label", "O") == "O":
+                        continue
+                    if int(row.get("support", 0)) == 0:
+                        continue
+                    label_rows.append([
+                        row.get("label", ""),
+                        row.get("precision", ""),
+                        row.get("recall", ""),
+                        row.get("f1", ""),
+                        row.get("support", ""),
+                    ])
+        except Exception:
+            pass
+        if label_rows:
+            label_rows_sorted = sorted(label_rows, key=lambda r: -float(r[4]))[:20]
+            md += "\n\n### Top-20 Entity Labels by Support\n\n"
+            md += md_table(
+                ["Label", "Precision", "Recall", "F1", "Support"],
+                label_rows_sorted,
+            )
+
+    latex = latex_table(
+        "AttentionNER: Learned Q/K/V Self-Attention for Turkish ENER",
+        "tab:attention_ner",
+        headers,
+        config_rows + metric_rows,
+    )
+    return md, latex, None
+
+
+def build_model_comparison_summary(bert_cva_dir: str, attention_dir: str, crf_dir: str):
+    bert_cva = load_json(os.path.join(bert_cva_dir, "comparison_summary.json"))
+    attn = load_json(os.path.join(attention_dir, "comparison_summary.json"))
+    crf = load_json(os.path.join(crf_dir, "crf_cv_summary.json"))
+
+    if not any([bert_cva, attn, crf]):
+        return None, None
+
+    rows = []
+    if crf:
+        agg = crf.get("aggregates", {})
+        rows.append([
+            "CRF Baseline",
+            fmt(agg.get("macro_precision", {}).get("mean"), 4),
+            fmt(agg.get("macro_recall", {}).get("mean"), 4),
+            fmt_pm(agg.get("macro_f1", {}).get("mean"), agg.get("macro_f1", {}).get("std")),
+            "4-fold CV",
+        ])
+    if bert_cva:
+        bert = bert_cva.get("bert", {})
+        rows.append([
+            "BERT Fine-tune",
+            fmt(bert.get("macro_f1_with_o"), 4),
+            "—",
+            fmt(bert.get("macro_f1_without_o"), 4),
+            "single run",
+        ])
+        cva = bert_cva.get("cva", {})
+        rows.append([
+            "CVA (Common Vector)",
+            fmt(cva.get("macro_f1_with_o"), 4),
+            "—",
+            fmt(cva.get("macro_f1_without_o"), 4),
+            "single run",
+        ])
+    if attn:
+        wo = attn.get("without_O", {})
+        frozen = "frozen BERT" if attn.get("freeze_bert") else "full fine-tune"
+        rows.append([
+            f"AttentionNER ({frozen})",
+            fmt(wo.get("macro_precision"), 4),
+            fmt(wo.get("macro_recall"), 4),
+            fmt(wo.get("macro_f1"), 4),
+            "single run",
+        ])
+
+    headers = ["Model", "Macro Precision", "Macro Recall", "Macro F1 (w/o O)", "Notes"]
+    md = md_table(headers, rows)
+    latex = latex_table(
+        "Overall Model Comparison — Turkish ENER",
+        "tab:model_comparison",
+        headers,
+        rows,
+    )
+    return md, latex
+
+
 def build_embedding_section(embed_dir: str):
     experiment = load_json(os.path.join(embed_dir, "experiment.json"))
     cls_report = load_json(os.path.join(embed_dir, "classification_report.json"))
@@ -481,6 +604,15 @@ def main():
     # Embedding analysis
     md_emb, latex_emb, emb_note = build_embedding_section(args.embed_dir)
     add_section("Embedding Extraction & CVA Analysis (Req F, H, N)", "embedding", md_emb, latex_emb, emb_note)
+
+    # AttentionNER (Q/K/V attention head)
+    md_attn, latex_attn, attn_note = build_attention_ner_section(args.attention_dir)
+    add_section("AttentionNER — Learned Q/K/V Self-Attention (Req O)", "attention_ner", md_attn, latex_attn, attn_note)
+
+    # Overall model comparison table
+    md_comp, latex_comp = build_model_comparison_summary(args.bert_cva_dir, args.attention_dir, args.crf_dir)
+    if md_comp:
+        add_section("Overall Model Comparison", "model_comparison", md_comp, latex_comp)
 
     latex_sections.append(r"\end{document}")
 
