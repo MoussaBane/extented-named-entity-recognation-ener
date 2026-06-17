@@ -1,6 +1,6 @@
 # Turkish Extended Named Entity Recognition (ENER)
 
-**Master Thesis Project — Moussa Bane, June 2026**  
+**Master Thesis Project - Moussa Bane, June 2026**  
 **Backbone:** `dbmdz/bert-base-turkish-cased` · **Entity types:** 131 · **Corpus:** 1,142 sentences
 
 This repository contains a complete Turkish Extended Named Entity Recognition (ENER) pipeline for a master's thesis. It covers corpus analysis, quality control, model training, embedding analysis, attention-based entity representations, and comparative evaluation across BERT, CRF, CVA, Attention-NER, Contrastive NER, and Character-level NER.
@@ -300,7 +300,7 @@ All experiments report precision, recall, and F1-score at the macro level, toget
 | CVA only | All tokens | 0.0167 | 0.0243 | SVD instability |
 | Attention NER (frozen BERT) | All tokens | 0.7488 | 0.0047 | Head-only training |
 
-**Key finding:** CRF outperforms BERT by 10x on macro F1. Mean-vector prototype (9.3% F1) outperforms fine-tuned BERT (3.4% F1) — counterintuitive result driven by label sparsity (97 types, ~1,035 training sentences).
+**Key finding:** CRF outperforms BERT by 10x on macro F1. Mean-vector prototype (9.3% F1) outperforms fine-tuned BERT (3.4% F1) - counterintuitive result driven by label sparsity (97 types, ~1,035 training sentences).
 
 ### Corpus Statistics
 
@@ -317,11 +317,11 @@ All experiments report precision, recall, and F1-score at the macro level, toget
 
 ## Thesis Contributions
 
-1. **Turkish ENER corpus** — First Turkish NER dataset with 131 fine-grained entity types, manually annotated using INCEpTION.
-2. **Comparative evaluation** — BERT vs CRF vs CVA vs Attention-NER vs Contrastive NER under a shared 4-fold protocol.
-3. **Surprising prototype result** — Zero-shot mean-vector prototype classification outperforms supervised BERT fine-tuning on macro F1, demonstrating the impact of label sparsity on fine-tuned models.
-4. **Q/K/V attention analysis** — First systematic extraction and comparison of BERT's internal Q, K, V projections as entity type representations.
-5. **Attention heatmaps for fine-grained NER** — Layer-wise and head-wise attention visualization for 97-class entity recognition.
+1. **Turkish ENER corpus** - First Turkish NER dataset with 131 fine-grained entity types, manually annotated using INCEpTION.
+2. **Comparative evaluation** - BERT vs CRF vs CVA vs Attention-NER vs Contrastive NER under a shared 4-fold protocol.
+3. **Surprising prototype result** - Zero-shot mean-vector prototype classification outperforms supervised BERT fine-tuning on macro F1, demonstrating the impact of label sparsity on fine-tuned models.
+4. **Q/K/V attention analysis** - First systematic extraction and comparison of BERT's internal Q, K, V projections as entity type representations.
+5. **Attention heatmaps for fine-grained NER** - Layer-wise and head-wise attention visualization for 97-class entity recognition.
 
 ## Reports and Documentation
 
@@ -344,7 +344,7 @@ All experiments report precision, recall, and F1-score at the macro level, toget
 
 ## Scientific Contribution
 
-This repository contributes a complete, reproducible pipeline for Turkish ENER: corpus analysis, BERT and CRF training, CVA similarity classification, attention-based entity representations (Q/K/V extraction), contrastive learning, OOV/top-k retrieval, systematic error analysis, statistical significance testing, and thesis-ready figure and report generation — all under a shared BIO-aligned 4-fold evaluation protocol.
+This repository contributes a complete, reproducible pipeline for Turkish ENER: corpus analysis, BERT and CRF training, CVA similarity classification, attention-based entity representations (Q/K/V extraction), contrastive learning, OOV/top-k retrieval, systematic error analysis, statistical significance testing, and thesis-ready figure and report generation - all under a shared BIO-aligned 4-fold evaluation protocol.
 
 ## Future Work
 
