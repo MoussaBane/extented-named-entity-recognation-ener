@@ -291,10 +291,14 @@ All experiments report precision, recall, and F1-score at the macro level, toget
 | ----- | ------------ | -------- | -------- | ----- |
 | **CRF** | Entity (w/o O) | 0.6868 ± 0.0257 | **0.3138 ± 0.0244** | Best macro F1 |
 | Context-only (mean cosine) | All tokens | 0.3294 | 0.0931 | Zero-shot prototype |
+| **Attention NER (full finetune)** | Entity (w/o O) | 0.6158 | **0.0638** | Best neural model |
 | BERT fine-tuned | Token (w/ O) | 0.7824 ± 0.0074 | 0.0340 ± 0.0121 | O-class bias |
-| BERT fine-tuned | Entity (w/o O) | 0.5204 ± 0.0988 | 0.0308 ± 0.0138 | Entity-only eval |
+| CharBERT (BERT + CharCNN) | All tokens | 0.5200 | 0.0319 | Char morphology |
+| Contrastive NER (SupConLoss) | All tokens | 0.5085 | 0.0316 | lambda=0.1 |
 | CVA + Context | All tokens | 0.0302 | 0.0317 | SVD prototype |
-| Attention NER (frozen) | All tokens | 0.7488 | 0.0047 | Needs full finetune |
+| BERT fine-tuned | Entity (w/o O) | 0.5204 ± 0.0988 | 0.0308 ± 0.0138 | Entity-only eval |
+| CVA only | All tokens | 0.0167 | 0.0243 | SVD instability |
+| Attention NER (frozen BERT) | All tokens | 0.7488 | 0.0047 | Head-only training |
 
 **Key finding:** CRF outperforms BERT by 10x on macro F1. Mean-vector prototype (9.3% F1) outperforms fine-tuned BERT (3.4% F1) — counterintuitive result driven by label sparsity (97 types, ~1,035 training sentences).
 
