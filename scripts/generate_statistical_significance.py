@@ -26,12 +26,15 @@ Usage:
 import argparse
 import json
 import os
+import sys
 import random
 import math
 import csv
 from collections import defaultdict
 
 import numpy as np
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 
 
 def parse_args():
@@ -200,7 +203,7 @@ def main():
     }
     print(f"\nWilcoxon signed-rank (CRF vs BERT, n={n_folds}):")
     print(f"  W = {W}, p = {p_wilcoxon:.4f}")
-    print(f"  Significant at α=0.10: {results['wilcoxon']['significant_at_0.10']}")
+    print(f"  Significant at a=0.10: {results['wilcoxon']['significant_at_0.10']}")
 
     # ---- Cohen's d ----
     d = cohens_d(crf_f1s, bert_f1s)

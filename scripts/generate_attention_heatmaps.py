@@ -17,6 +17,7 @@ Usage:
 
 import argparse
 import os
+import sys
 import json
 import numpy as np
 import torch
@@ -26,6 +27,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from collections import defaultdict
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 
 from ner_stats.conll_reader import read_conll_file
 from ner_stats.data_utils import set_global_seed
@@ -190,7 +193,9 @@ def main():
     print(f"Loading model from: {args.model_dir}")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     tokenizer = AutoTokenizer.from_pretrained(args.model_dir)
-    model = AutoModelForTokenClassification.from_pretrained(args.model_dir)
+    model = AutoModelForTokenClassification.from_pretrained(
+        args.model_dir, attn_implementation="eager"
+    )
     model.to(device)
     model.eval()
 

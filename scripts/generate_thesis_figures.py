@@ -24,6 +24,7 @@ Figures generated:
 
 import argparse
 import os
+import sys
 import json
 import csv
 import shutil
@@ -34,6 +35,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 
 # Consistent thesis style
 plt.rcParams.update({

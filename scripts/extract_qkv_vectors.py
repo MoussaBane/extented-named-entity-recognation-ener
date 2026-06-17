@@ -15,8 +15,12 @@ Usage:
 
 import argparse
 import os
+import sys
 import json
 import numpy as np
+
+# Add project root to sys.path so `from ner_stats import ...` works
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from collections import defaultdict
 import torch
 from transformers import AutoTokenizer, AutoModelForTokenClassification
@@ -209,7 +213,7 @@ def plot_tsne(embeddings, labels, title, save_path, top_n=15):
         filtered_embs = filtered_embs[idx]
         filtered_labels = filtered_labels[idx]
 
-    tsne = TSNE(n_components=2, random_state=42, perplexity=30, n_iter=1000)
+    tsne = TSNE(n_components=2, random_state=42, perplexity=30, max_iter=1000)
     coords = tsne.fit_transform(filtered_embs)
 
     fig, ax = plt.subplots(figsize=(12, 8))
