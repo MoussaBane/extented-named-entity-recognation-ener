@@ -1,6 +1,6 @@
 # Virtual environment
 .venv/
-.claude
+.claude/
 
 # Python caches
 __pycache__/
