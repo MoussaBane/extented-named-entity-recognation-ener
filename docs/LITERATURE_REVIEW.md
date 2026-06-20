@@ -1,4 +1,4 @@
-# Literature Review — Extended Named Entity Recognition Across Languages
+# Literature Review - Extended Named Entity Recognition Across Languages
 
 **Project:** Extracting Extended Named Entity Embeddings from Text via Deep Neural Networks
 **Scope:** Extended/fine-grained NER, entity embeddings, attention-based entity representation,
@@ -14,7 +14,7 @@ NER literature, as required by the supervisor review. Parts I–IV below are rep
 
 ## Part I: Extended and Fine-Grained NER (English-centric)
 
-### 1.1 FIGER — Fine-Grained Entity Recognition
+### 1.1 FIGER - Fine-Grained Entity Recognition
 **Citation:** Ling, X. & Weld, D. (2012). "Fine-Grained Entity Recognition." *Proceedings of AAAI 2012.*
 **Summary:** Introduced multi-label fine-grained entity typing with 112 types arranged in a two-level
 hierarchy, using distant supervision against Freebase.
@@ -28,7 +28,7 @@ hierarchy, using distant supervision against Freebase.
 encoder and a sparse multi-label classification head.
 **Dataset:** A new crowd-sourced ultra-fine typing dataset plus distantly supervised data from headwords and Wikipedia.
 **Method:** BiLSTM context encoder, multi-task loss separating general/fine/ultra-fine type granularities.
-**Results:** ~48% F1 (macro) on a held-out human-annotated test set — illustrating the difficulty of the
+**Results:** ~48% F1 (macro) on a held-out human-annotated test set illustrating the difficulty of the
 open-ended type setting.
 
 ### 1.3 FewNERD
@@ -38,7 +38,7 @@ for both standard supervised and few-shot evaluation.
 **Dataset:** 188k Wikipedia sentences, 66 fine-grained entity types.
 **Method:** BERT-based span classification and prototypical-network few-shot baselines.
 **Results:** Supervised BERT-tagger: ~92% micro-F1 (full-shot); few-shot 5-way 1~5 shot prototypical
-network: 40–60% F1, exposing fine-grained NER's data efficiency problem — directly analogous to this
+network: 40–60% F1, exposing fine-grained NER's data efficiency problem directly analogous to this
 thesis's 131-type, 1,142-sentence setting.
 
 ### 1.4 OntoNotes 5.0
@@ -56,7 +56,7 @@ as observed in this thesis (macro-F1 3–31%).
 ## Part II: Turkish NER
 
 ### 2.1 BERTurk
-**Citation:** Schweter, S. (2020). "BERTurk — BERT models for Turkish." *Zenodo.* (dbmdz/bert-base-turkish-cased)
+**Citation:** Schweter, S. (2020). "BERTurk - BERT models for Turkish." *Zenodo.* (dbmdz/bert-base-turkish-cased)
 **Summary:** Pretrained Turkish BERT used as the backbone for this thesis's fine-tuned ENER model.
 **Dataset:** Turkish OSCAR, Wikipedia, OPUS corpora (~35GB).
 **Method:** Standard BERT-base masked-LM pretraining on Turkish text with a Turkish-specific WordPiece vocabulary.
@@ -69,7 +69,7 @@ System for Turkish." *Natural Language Engineering, 9(2).*
 establishing the standard PERSON/ORG/LOCATION 3-class Turkish NER task.
 **Dataset:** Turkish newswire (Milliyet corpus).
 **Method:** HMM with morphological feature templates (Turkish being agglutinative).
-**Results:** ~91% F1 on the 3-class task — far above the 97–131-class extended setting in this thesis,
+**Results:** ~91% F1 on the 3-class task far above the 97–131-class extended setting in this thesis,
 illustrating how Turkish's morphological complexity compounds with type granularity.
 
 ### 2.3 Cross-lingual Name Tagging (XTREME-style)
@@ -89,7 +89,7 @@ is non-trivial, while this thesis's 97–131-class scheme operates at a differen
 **Citation:** Yamada, I., Asai, A., Shindo, H., Takeda, H., & Matsumoto, Y. (2020). "LUKE: Deep Contextualized
 Entity Representations with Entity-aware Self-attention." *EMNLP 2020.*
 **Summary:** Extends BERT's self-attention with an entity-aware mechanism that treats entities as
-first-class tokens, learning joint word/entity contextualized embeddings — directly relevant to this
+first-class tokens, learning joint word/entity contextualized embeddings directly relevant to this
 thesis's Q/K/V entity-embedding extraction (`ner_stats/attention_ner.py`, `scripts/extract_qkv_vectors.py`).
 **Dataset:** Wikipedia (pretraining), CoNLL-2003, TACRED, Open Entity (fine-tuning/eval).
 **Method:** Entity-aware self-attention; separate query matrices for word-to-entity, entity-to-word, and entity-to-entity attention.
@@ -105,8 +105,8 @@ better suited to span-level tasks such as NER and entity extraction.
 
 ### 3.3 Self-Attention for NER (general)
 **Citation:** Vaswani, A. et al. (2017). "Attention Is All You Need." *NeurIPS 2017.*
-**Summary:** Defines the scaled dot-product self-attention mechanism — Q = XW_Q, K = XW_K, V = XW_V,
-Attention(Q,K,V) = softmax(QK^T/√d_k)V — that underlies both BERT's internal attention layers and this
+**Summary:** Defines the scaled dot-product self-attention mechanism Q = XW_Q, K = XW_K, V = XW_V,
+Attention(Q,K,V) = softmax(QK^T/√d_k)V that underlies both BERT's internal attention layers and this
 thesis's dedicated `AttentionNER` Q/K/V head.
 **Dataset:** WMT 2014 En-De / En-Fr (original paper; machine translation).
 **Method:** Multi-head scaled dot-product attention, positional encodings, encoder-decoder Transformer.
@@ -123,13 +123,13 @@ including all entity-representation work cited above.
 the same family of supervised contrastive loss (SupConLoss) is used in this thesis's `ner_stats/contrastive.py`.
 **Dataset:** STS benchmarks (unsupervised); NLI datasets (supervised variant).
 **Method:** Contrastive loss over in-batch negatives with two independently dropout-perturbed forward passes.
-**Results:** 76.3 Spearman correlation (unsupervised), 81.6 (supervised) on STS — establishing contrastive
+**Results:** 76.3 Spearman correlation (unsupervised), 81.6 (supervised) on STS establishing contrastive
 objectives as effective even with minimal architectural change.
 
 ### 4.2 Supervised Contrastive Learning (SupCon)
 **Citation:** Khosla, P. et al. (2020). "Supervised Contrastive Learning." *NeurIPS 2020.*
 **Summary:** Generalizes contrastive loss to the fully supervised setting by pulling together same-class
-embeddings and pushing apart different-class ones — the loss formulation reused directly in this
+embeddings and pushing apart different-class ones the loss formulation reused directly in this
 thesis's ContrastiveNER experiment.
 **Dataset:** ImageNet (original paper, vision domain).
 **Method:** SupConLoss: normalized embeddings, temperature-scaled cosine similarity, multi-positive contrastive loss.
@@ -138,24 +138,24 @@ domain-agnostic and has since been adopted in NLP/NER works.
 
 ---
 
-## Part V: Cross-Lingual Extended NER — German, French, Arabic, Chinese
+## Part V: Cross-Lingual Extended NER - German, French, Arabic, Chinese
 
 This section directly addresses the supervisor's requirement for NER literature in German, French,
 Arabic, and Chinese, alongside the English/Turkish coverage above.
 
-### 5.1 German — GermEval 2014 NER Shared Task
+### 5.1 German - GermEval 2014 NER Shared Task
 **Citation:** Benikova, D., Biemann, C., & Reznicek, M. (2014). "NoSta-D Named Entity Annotation for
 German: Guidelines and Dataset." *LREC 2014.*
 **Summary:** Defines the GermEval 2014 German NER scheme, extending the standard 4-class PER/LOC/ORG/OTH
-scheme with nested and derived entity annotations (e.g., `PERderiv`, `LOCpart`) — conceptually similar
+scheme with nested and derived entity annotations (e.g., `PERderiv`, `LOCpart`) conceptually similar
 to this thesis's fine-grained type extension of a base PERSON/LOC/ORG taxonomy.
 **Dataset:** ~590k German tokens (German Wikipedia + news), CoNLL-style BIO annotation.
 **Method:** CRF and (later) BiLSTM-CRF baselines over morphological and orthographic features.
-**Results:** Best shared-task system: 76.4% F1 (strict, all classes including nested types) — showing
+**Results:** Best shared-task system: 76.4% F1 (strict, all classes including nested types) showing
 that nested/extended type schemes substantially reduce achievable F1 relative to the flat 4-class
 setting, mirroring the BERT/CRF F1 drop observed in this thesis when moving from 4 to 97+ types.
 
-### 5.2 German — Transformer-based German NER
+### 5.2 German - Transformer-based German NER
 **Citation:** Chan, B., Schweter, S., & Möller, T. (2020). "German's Next Language Model." *COLING 2020.*
 (Introduces GermanBERT / GBERT and GELECTRA pretrained models.)
 **Summary:** Trains and benchmarks German-specific BERT/ELECTRA variants on German NER (GermEval 2014)
@@ -165,57 +165,57 @@ and other tasks, the German analogue of the Turkish BERTurk model used as this t
 **Results:** GELECTRA-large: 88.3% F1 on CoNLL-2003 German (4-class), confirming that German fine-grained
 NER also benefits substantially from native-language pretraining, as Turkish ENER does from BERTurk.
 
-### 5.3 French — WikiNER (multilingual, includes French)
+### 5.3 French - WikiNER (multilingual, includes French)
 **Citation:** Nothman, J., Ringland, N., Radford, W., Murphy, T., & Curran, J. R. (2013). "Learning
 Multilingual Named Entity Recognition from Wikipedia." *Artificial Intelligence, 194, 151–175.*
 **Summary:** Automatically derives silver-standard NER annotations from Wikipedia hyperlink structure
-across nine languages including French, enabling NER training without manual annotation — relevant to
+across nine languages including French, enabling NER training without manual annotation relevant to
 this thesis's discussion of annotation cost for low-resource fine-grained schemes.
 **Dataset:** WikiNER corpus: ~3.4M French tokens (silver-standard PER/LOC/ORG/MISC).
 **Method:** Heuristic projection of Wikipedia infobox/category metadata onto hyperlinked mentions, used
 to train a standard CRF/perceptron NER tagger per language.
 **Results:** French WikiNER-trained CRF: ~85% F1 on held-out Wikipedia text, but with a measurable
-precision drop on genuinely out-of-domain news text — a domain-shift risk also relevant to this thesis's
+precision drop on genuinely out-of-domain news text a domain-shift risk also relevant to this thesis's
 OOV entity retrieval experiment (`results/oov_full/`).
 
-### 5.4 French — CamemBERT
+### 5.4 French - CamemBERT
 **Citation:** Martin, L. et al. (2020). "CamemBERT: a Tasty French Language Model." *ACL 2020.*
 **Summary:** French RoBERTa-style pretrained model, fine-tuned and evaluated on the French Treebank NER
-(FTB-NER) task — the French equivalent of fine-tuning BERTurk for Turkish ENER in this thesis.
+(FTB-NER) task the French equivalent of fine-tuning BERTurk for Turkish ENER in this thesis.
 **Dataset:** OSCAR French (pretraining, 138GB); French Treebank NER (fine-tuning, 4-class PER/LOC/ORG/MISC).
 **Method:** RoBERTa pretraining objective on French-only corpus, standard token-classification fine-tuning head.
 **Results:** 89.97% F1 on FTB-NER (4-class), again far above what is achievable once the type inventory
 is extended into the dozens/hundreds, consistent with this thesis's findings.
 
-### 5.5 Arabic — ANERcorp / ANERsys
+### 5.5 Arabic - ANERcorp / ANERsys
 **Citation:** Benajiba, Y., Rosso, P., & Benedí Ruiz, J. M. (2007). "ANERsys: An Arabic Named Entity
 Recognition System Based on Maximum Entropy." *CICLing 2007.*
 **Summary:** Introduces ANERcorp, the first widely used manually annotated Arabic NER corpus, and a
-maximum-entropy NER tagger over morphological and contextual features — addressing challenges specific
+maximum-entropy NER tagger over morphological and contextual features addressing challenges specific
 to Arabic's rich morphology and lack of capitalization cues (a similar morphological-complexity argument
 applies to Turkish agglutination in this thesis).
 **Dataset:** ANERcorp: ~150k Arabic words (newswire), 4-class PER/LOC/ORG/MISC.
 **Method:** Maximum-entropy classifier with morphological, contextual, and gazetteer features.
-**Results:** ~83.3% F1 on the 4-class Arabic task — comparable to early Turkish HMM-based results
+**Results:** ~83.3% F1 on the 4-class Arabic task comparable to early Turkish HMM-based results
 (Tür et al., 2003), both well above what flat-scheme systems achieve once extended to fine-grained types.
 
-### 5.6 Arabic — AraBERT
+### 5.6 Arabic - AraBERT
 **Citation:** Antoun, W., Baly, F., & Hajj, H. (2020). "AraBERT: Transformer-based Model for Arabic
 Language Understanding." *OSACT 2020 (LREC Workshop).*
 **Summary:** Arabic-specific BERT pretrained on a large Arabic corpus, fine-tuned for Arabic NER among
-other tasks — the Arabic counterpart to BERTurk used in this thesis.
+other tasks the Arabic counterpart to BERTurk used in this thesis.
 **Dataset:** 70M Arabic sentences (news, OSIAN, OSCAR) for pretraining; ANERcorp for NER fine-tuning.
 **Method:** Standard BERT-base pretraining with Arabic-specific tokenization (handling diacritics/morphology); token-classification fine-tuning.
-**Results:** ~84.2% F1 on ANERcorp NER (4-class) — modest gains over feature-based ANERsys, underscoring
+**Results:** ~84.2% F1 on ANERcorp NER (4-class) modest gains over feature-based ANERsys, underscoring
 that transformer pretraining alone does not fully resolve morphologically-driven NER difficulty, a
 finding that parallels this thesis's BERT-vs-CRF result (CRF outperforming fine-tuned BERTurk on the
 97-class Turkish ENER task).
 
-### 5.7 Chinese — Lattice LSTM for Chinese NER
+### 5.7 Chinese - Lattice LSTM for Chinese NER
 **Citation:** Zhang, Y. & Yang, J. (2018). "Chinese NER Using Lattice LSTM." *ACL 2018.*
 **Summary:** Addresses the lack of explicit word boundaries in Chinese by encoding all possible
 word-lattice paths (from a lexicon) into an LSTM-CRF tagger, avoiding error propagation from a separate
-word-segmentation step — analogous in spirit to this thesis's choice to operate at the word/token level
+word-segmentation step analogous in spirit to this thesis's choice to operate at the word/token level
 directly on a CoNLL-style annotated Turkish corpus rather than relying on a separate morphological segmenter.
 **Dataset:** MSRA NER (newswire), Weibo NER (social media), Chinese Resume NER.
 **Method:** Character-based LSTM-CRF augmented with a lattice structure encoding lexicon-matched word spans.
@@ -223,7 +223,7 @@ directly on a CoNLL-style annotated Turkish corpus rather than relying on a sepa
 that integrating lexical/morphological structure substantially helps non-segmenting languages, an
 argument also made by this thesis's CharCNN+BERT hybrid experiment (`results/char_ner_full/`).
 
-### 5.8 Chinese — BERT-Chinese NER / MSRA Benchmark
+### 5.8 Chinese - BERT-Chinese NER / MSRA Benchmark
 **Citation:** Levow, G.-A. (2006). "The Third International Chinese Language Processing Bakeoff:
 Word Segmentation and Named Entity Recognition." *SIGHAN 2006* (defines the MSRA NER benchmark);
 modern transformer baselines reported in Sun, Y. et al. (2021), "ERNIE 3.0," and standard
@@ -234,7 +234,7 @@ which BERT-based Chinese NER systems are measured.
 **Method:** Character-level `bert-base-chinese` fine-tuning with a token-classification head (Chinese
 has no whitespace word boundaries, so models tag at the character level, conceptually parallel to
 sub-token/first-subtoken alignment used in this thesis's `ner_stats/data_utils.py`).
-**Results:** BERT-base-Chinese on MSRA: ~95% F1 (3-class) — again showing the sharp performance gap
+**Results:** BERT-base-Chinese on MSRA: ~95% F1 (3-class) again showing the sharp performance gap
 between flat 3–4 class schemes (90–95% F1 across all five non-English languages surveyed here) and
 fine-grained 97–131-type schemes such as this thesis's (3–31% macro-F1), which is the central empirical
 contribution of this thesis: extended/fine-grained type inventories are dramatically harder across
@@ -255,11 +255,11 @@ contribution of this thesis: extended/fine-grained type inventories are dramatic
 
 **Synthesis:** Across all six languages, flat 3–4-class NER with modern transformer backbones reaches
 76–95% F1. This thesis's Turkish Extended NER task (97–131 fine-grained types, 1,142 annotated
-sentences) achieves 3.4–31.4% macro-F1 — not because Turkish or BERTurk are uniquely weak, but because
+sentences) achieves 3.4–31.4% macro-F1 not because Turkish or BERTurk are uniquely weak, but because
 extending the type inventory by an order of magnitude while *not* proportionally scaling annotated data
 is, by this cross-lingual comparison, a generally hard problem (cf. FewNERD's 40–60% few-shot F1, and
 GermEval's drop to 76% once nested/derived types are added to German's base 4-class scheme). This
-framing — extended-type difficulty as a general phenomenon rather than a Turkish-specific weakness — is
+framing extended-type difficulty as a general phenomenon rather than a Turkish-specific weakness is
 the key contextualization this literature review provides for the thesis's results chapter.
 
 ---
@@ -280,7 +280,7 @@ the key contextualization this literature review provides for the thesis's resul
 12. Martin, L., Muller, B., Suárez, P. J. O., Dupont, Y., Romary, L., de la Clergerie, É. V., Seddah, D., & Sagot, B. (2020). CamemBERT: a Tasty French Language Model. *ACL 2020.*
 13. Nothman, J., Ringland, N., Radford, W., Murphy, T., & Curran, J. R. (2013). Learning Multilingual Named Entity Recognition from Wikipedia. *Artificial Intelligence, 194, 151–175.*
 14. Pan, X., Zhang, B., May, J., Nothman, J., Knight, K., & Ji, H. (2017). Cross-lingual Name Tagging and Linking for 282 Languages. *ACL 2017.*
-15. Schweter, S. (2020). BERTurk — BERT models for Turkish. *Zenodo. https://doi.org/10.5281/zenodo.3770924*
+15. Schweter, S. (2020). BERTurk BERT models for Turkish. *Zenodo. https://doi.org/10.5281/zenodo.3770924*
 16. Tür, G., Hakkani-Tür, D., & Oflazer, K. (2003). A Statistical Information Extraction System for Turkish. *Natural Language Engineering, 9(2), 181–210.*
 17. Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, Ł., & Polosukhin, I. (2017). Attention Is All You Need. *NeurIPS 2017.*
 18. Weischedel, R., et al. (2013). OntoNotes Release 5.0. *LDC2013T19.*
