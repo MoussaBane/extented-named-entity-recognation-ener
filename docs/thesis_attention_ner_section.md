@@ -34,12 +34,12 @@ Girdi token dizisi
 
 Burada:
 
-- **W_Q, W_K, W_V** — tamamen NVT görevi için öğrenilen projeksiyon matrisleri (d_head = 256); her biri ℝ^{256×768}
-- **M_pad** — dolgu token'larını maskelemek için büyük negatif değerler içeren maske
-- **W_O** — d_head → 768 projeksiyon (artık bağlantı için); ℝ^{768×256}
-- **LayerNorm** — eğitim stabilitesi sağlar
+- **W_Q, W_K, W_V**  tamamen NVT görevi için öğrenilen projeksiyon matrisleri (d_head = 256); her biri ℝ^{256×768}
+- **M_pad**  dolgu token'larını maskelemek için büyük negatif değerler içeren maske
+- **W_O**  d_head → 768 projeksiyon (artık bağlantı için); ℝ^{768×256}
+- **LayerNorm**  eğitim stabilitesi sağlar
 
-**Parametre verimliliği:** `freeze_bert=True` modunda yalnızca ~790K parametre eğitilmektedir — BERT'in 110M parametresinin yalnızca **~%0.7'si**. Bu sayede eğitim hızı önemli ölçüde artmakta, BERT temsilleri ise korunmaktadır.
+**Parametre verimliliği:** `freeze_bert=True` modunda yalnızca ~790K parametre eğitilmektedir  BERT'in 110M parametresinin yalnızca **~%0.7'si**. Bu sayede eğitim hızı önemli ölçüde artmakta, BERT temsilleri ise korunmaktadır.
 
 ### 1.3 Dikkat Hesaplaması (Scaled Dot-Product Attention)
 
@@ -102,9 +102,9 @@ python scripts/run_attention_ner.py \
 
 | Model | Makro F1 (O dahil) | Makro F1 (O hariç) | Doğruluk | Notlar |
 | --- | --- | --- | --- | --- |
-| CRF Baseline | — | 0.314 ± 0.021 | — | 4-fold CV |
-| BERT Fine-tune | — | 0.034 ± 0.012 | 0.782 ± 0.007 | 4-fold CV |
-| CVA (Common Vector) | — | 0.018 | 0.020 | tek çalışma |
+| CRF Baseline |  | 0.314 ± 0.021 |  | 4-fold CV |
+| BERT Fine-tune |  | 0.034 ± 0.012 | 0.782 ± 0.007 | 4-fold CV |
+| CVA (Common Vector) |  | 0.018 | 0.020 | tek çalışma |
 | **AttentionNER – Frozen BERT** | **0.0047** | **0.000** | **0.7488** | 5 epoch, d_head=256 |
 | **AttentionNER – Ağırlıklı Loss** | **0.0047** | **0.000** | **0.7477** | 10 epoch, o\_weight=0.1 |
 
@@ -114,9 +114,9 @@ python scripts/run_attention_ner.py \
 
 Bu sonuçlar iki önemli bulguyu ortaya koymaktadır:
 
-**Bulgu 1 — Mimari Eşdeğerliği:** Dondurulmuş BERT üzerinde yalnızca Q/K/V dikkat başlığı eğitilerek tam BERT fine-tune ile aynı doğruluk elde edilmektedir (0.7488 vs 0.7477). Bu durum, BERT gömme vektörlerinin varlık tanıma için yeterli bilgi içerdiğini göstermektedir.
+**Bulgu 1  Mimari Eşdeğerliği:** Dondurulmuş BERT üzerinde yalnızca Q/K/V dikkat başlığı eğitilerek tam BERT fine-tune ile aynı doğruluk elde edilmektedir (0.7488 vs 0.7477). Bu durum, BERT gömme vektörlerinin varlık tanıma için yeterli bilgi içerdiğini göstermektedir.
 
-**Bulgu 2 — Baskın Etken Sınıf Dengesizliğidir:** Hem standart hem de ağırlıklı kayıp fonksiyonu ile eğitilmiş AttentionNER modelleri entity etiketlerinde F1=0 vermektedir. Bu, BERT fine-tune sonucuyla (makro F1 = 0.034) örtüşmekte ve asıl sorunun mimari seçiminden değil, **97 varlık tipi × az sayıda eğitim verisi** kombinasyonundan kaynaklandığını kanıtlamaktadır.
+**Bulgu 2  Baskın Etken Sınıf Dengesizliğidir:** Hem standart hem de ağırlıklı kayıp fonksiyonu ile eğitilmiş AttentionNER modelleri entity etiketlerinde F1=0 vermektedir. Bu, BERT fine-tune sonucuyla (makro F1 = 0.034) örtüşmekte ve asıl sorunun mimari seçiminden değil, **97 varlık tipi × az sayıda eğitim verisi** kombinasyonundan kaynaklandığını kanıtlamaktadır.
 
 **CRF Üstünlüğü:** CRF makro F1 = 0.314 ile tüm öğrenme tabanlı yöntemleri geride bırakmaktadır. Bu, az kaynaklı ortamlarda elle tasarlanmış özelliklerle çalışan yöntemlerin öğrenme tabanlı modellerden üstün olabileceğini göstermektedir.
 
