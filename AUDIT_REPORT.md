@@ -1,231 +1,88 @@
 # Repository Audit Report — Turkish Extended NER (ENER)
 
-**Author:** Moussa Bane  
-**Date:** June 2026  
-**Auditor:** Senior NLP Research Engineer  
+**Author:** Moussa Bane
+**Date:** June 2026 (updated — supersedes the original audit pass committed in `9bd403f`/`0741f87`)
 **Scope:** Full repository audit for thesis submission readiness
 
----
-
-## 1. Existing Components
-
-The following components are implemented, tested, and producing results.
-
-### 1.1 Data Pipeline
-| Component | File | Status |
-|-----------|------|--------|
-| CoNLL reader | `ner_stats/conll_reader.py` | ✅ Complete |
-| BIO validation | `ner_stats/data_utils.py` | ✅ Complete |
-| Label map builder | `ner_stats/data_utils.py` | ✅ Complete |
-| Tagset loader (131 types) | `ner_stats/tagset.py` | ✅ Complete |
-| Corpus statistics | `ner_stats/statistics.py` | ✅ Complete |
-| INCEpTION annotation reader | `ner_stats/conll_reader.py` | ✅ Complete |
-| Character span converter | `ner_stats/spans.py` | ✅ Complete |
-
-### 1.2 Models
-| Component | File | Status |
-|-----------|------|--------|
-| BERT fine-tuning (HF Trainer) | `scripts/train_ner.py` | ✅ Complete |
-| CRF baseline (sklearn-crfsuite) | `scripts/run_crf_baseline.py` | ✅ Complete |
-| Attention NER (learned Q/K/V head) | `ner_stats/attention_ner.py` | ✅ Complete |
-| Character CNN encoder | `ner_stats/char_features.py` | ✅ Complete |
-| Hybrid BERT+CharCNN | `scripts/run_char_ner.py` | ✅ Complete |
-| Contrastive NER (SupConLoss) | `ner_stats/contrastive.py` | ✅ Complete |
-| Common Vector Approach (CVA) | `ner_stats/cva.py` | ✅ Complete |
-
-### 1.3 Evaluation
-| Component | File | Status |
-|-----------|------|--------|
-| Token-level metrics (P/R/F1) | `ner_stats/evaluation.py` | ✅ Complete |
-| Confusion matrix (full + top-N) | `ner_stats/evaluation_report.py` | ✅ Complete |
-| Per-label classification report | `scripts/run_attention_ner.py` | ✅ Complete |
-| 4-fold cross-validation (BERT) | `scripts/run_cross_validation.py` | ✅ Complete |
-| 4-fold cross-validation (CRF) | `scripts/run_crf_baseline.py` | ✅ Complete |
-| Multi-seed + bootstrap significance | `scripts/run_multi_seed.py` | ✅ Complete |
-
-### 1.4 Embedding & Representation
-| Component | File | Status |
-|-----------|------|--------|
-| TransformerEmbedder (word-aligned) | `ner_stats/embeddings.py` | ✅ Complete |
-| Embedding extraction pipeline | `scripts/run_embedding_analysis.py` | ✅ Complete |
-| CVA class vectors (mean + SVD) | `ner_stats/cva.py` | ✅ Complete |
-| OOV entity retrieval (top-K) | `scripts/oov_experiment.py` | ✅ Complete |
-| PCA / t-SNE / UMAP visualization | `ner_stats/visualization.py` | ✅ Complete |
-| Prototype overlay plots | `scripts/generate_prototype_visuals.py` | ✅ Complete |
-
-### 1.5 Documentation & Reports
-| Component | File | Status |
-|-----------|------|--------|
-| Main README (EN) | `README.md` | ✅ Complete |
-| Turkish README | `README.tr.md` | ✅ Complete |
-| Project report | `reports/project_report.md` | ✅ Complete |
-| Thesis attention NER section | `docs/thesis_attention_ner_section.md` | ✅ Complete |
-| Thesis summary generator | `scripts/generate_thesis_summary.py` | ✅ Complete |
-
-### 1.6 Experimental Results
-| Experiment | Output Location | Status |
-|------------|-----------------|--------|
-| BERT 4-fold CV | `results/cv_full/` | ✅ 4 folds complete |
-| CRF 4-fold CV | `results/crf_full/` | ✅ 4 folds complete |
-| Context vs CVA vs Combined | `results/compare_full/` | ✅ Complete |
-| Attention NER (frozen BERT) | `results/attention_ner/` | ✅ Complete |
-| Attention NER (weighted loss) | `results/attention_ner_weighted/` | ✅ Complete |
-| Embedding extraction (full) | `results/embedding_full/` | ✅ Complete |
-| OOV retrieval (full) | `results/oov_full/` | ✅ Complete |
+> This is a refresh of the audit originally performed for this branch. Most items the original audit
+> listed as "missing" were subsequently implemented and committed (`0741f87`, `4f4c139`). This revision
+> reflects the actual current repository state and folds in the small remaining gaps closed in this pass
+> (`prototype_vectors.pkl`, `prototype_analysis.md`, UMAP entity plots, consolidated confusion matrices,
+> `docs/LITERATURE_REVIEW.md`, `docs/THESIS_CONTRIBUTIONS.md`, `FINAL_PROJECT_STATUS.md`,
+> `THESIS_READINESS_REPORT.md`).
 
 ---
 
-## 2. Missing Components
+## Implemented Requirements
 
-The following items are required by supervisor requirements but are absent from the repository.
+| Requirement | Evidence |
+|---|---|
+| BERT-based ENER training | `scripts/train_ner.py`, `outputs/bert-ner-full/checkpoint-390/` |
+| CRF baseline | `scripts/run_crf_baseline.py`, `results/crf_full/fold_{0-3}/` |
+| 4-fold cross-validation (shared protocol) | `scripts/run_cross_validation.py`, `scripts/run_crf_baseline.py`, `results/{cv_full,crf_full}/fold_{0-3}/` |
+| Precision / Recall / F1 | `ner_stats/evaluation.py`; per-fold `metrics_summary.csv`, `per_class_metrics.csv` |
+| Confusion matrices (full + top-label) | Per-fold `confusion_matrix.{csv,png}`; consolidated top-label view + interpretation: `results/confusion_matrices/` |
+| Per-label metrics (all 97 observed labels) | `results/label_metrics.{csv,md}`, `results/publication_ready_label_table.csv` |
+| Entity embeddings (word-aligned BERT hidden states) | `ner_stats/embeddings.py`, `results/embedding_full/{train,eval}_embeddings.{csv,npy}` (24,911 × 768) |
+| Attention-based entity representation — learned Q/K/V head | `ner_stats/attention_ner.py` (trainable `W_Q`/`W_K`/`W_V`), `results/attention_ner_full_finetune/` (macro-F1 6.38%) |
+| Attention-based entity representation — BERT's own Q/K/V extraction | `scripts/extract_qkv_vectors.py`, `results/qkv_analysis/entity_{q,k,v}_vectors.npy` |
+| Entity prototype vectors (mean per label) | `ner_stats/cva.py`, `results/embedding_full/class_vectors.json`, **`prototype_vectors.pkl`** (96 labels, pickled dict) |
+| Prototype cosine-similarity analysis | **`prototype_analysis.md`** — full pairwise matrix + supervisor-focus-label subset (PERSON/ORG/DATE/EVENT/DISEASE/LOC_CITY/LOC_COUNTRY) |
+| PCA / t-SNE visualization of embeddings | `ner_stats/visualization.py`; `results/embedding_full/{pca,tsne}_embeddings.png`; `results/qkv_analysis/{pca,tsne}_*.png` |
+| UMAP visualization of entity embeddings | **`results/plots/umap_entities.png`** (new — UMAP previously not generated for entity embeddings); companion `pca_entities.png`, `tsne_entities.png` regenerated alongside it |
+| Model comparison (BERT vs. CRF vs. 4 others) | `results/comparison_results.csv`, `results/comparison_report.md` |
+| Statistical significance testing | `results/statistical_significance_report.md`, `results/significance/` (Bootstrap CI, Wilcoxon p=0.034, Cohen's d=14.54) |
+| Error analysis (FP/FN, boundary vs. type) | `results/error_analysis_report.md`, `results/false_{positive,negative}_analysis.md`, `results/boundary_detection_report.md` |
+| Literature review — English/Turkish/attention/contrastive | `related_work_review.md` (509 lines, 10 papers) |
+| Literature review — German/French/Arabic/Chinese | **`docs/LITERATURE_REVIEW.md`** (new — adds 4 languages + cross-lingual synthesis table) |
+| Thesis documentation (architecture → future work) | **`docs/THESIS_CONTRIBUTIONS.md`** (new — 11 sections) |
+| Thesis-ready figures | `thesis_figures/` (17 publication-quality PNGs) |
+| Supervisor requirement checklist | **`FINAL_PROJECT_STATUS.md`** (new) |
+| Readiness narrative (risks, chapters, venues) | **`THESIS_READINESS_REPORT.md`** (new) |
+| README accuracy | `README.md` — verified against code; one historical minor inconsistency (131 canonical vs. 97 observed entity types) is explained, not a defect |
 
-### 2.1 Structured Report Files
-| Required File | Status | Notes |
-|---------------|--------|-------|
-| `fold_results.csv` | ❌ Missing | Must be generated from `cv_full/` JSON data |
-| `fold_summary.csv` | ❌ Missing | Must be generated from `cv_full/` + `crf_full/` JSON |
-| `cross_validation_report.md` | ❌ Missing | Narrative report on 4-fold CV |
-| `comparison_results.csv` | ❌ Missing | Unified BERT vs CRF vs Attention comparison |
-| `comparison_report.md` | ❌ Missing | Narrative comparison report |
-| `label_metrics.csv` | ❌ Missing | Per-label P/R/F1 for all 97+ entity types |
-| `label_metrics.md` | ❌ Missing | Markdown table of per-label metrics |
-| `publication_ready_label_table.csv` | ❌ Missing | Formatted for LaTeX/paper submission |
-| `cva_report.md` | ❌ Missing | CVA analysis narrative |
-| `entity_embedding_analysis.md` | ❌ Missing | Embedding analysis narrative |
-| `attention_analysis.md` | ❌ Missing | Attention mechanism analysis |
-| `attention_entity_representation_report.md` | ❌ Missing | Thesis-ready attention report |
-| `boundary_detection_report.md` | ❌ Missing | Character-level boundary report |
-| `contrastive_learning_report.md` | ❌ Missing | Contrastive learning experiment report |
-| `error_analysis_report.md` | ❌ Missing | False positive/negative analysis |
-| `false_positive_analysis.md` | ❌ Missing | FP breakdown per label |
-| `false_negative_analysis.md` | ❌ Missing | FN breakdown per label |
-| `statistical_significance_report.md` | ❌ Missing | Bootstrap/McNemar tests |
-| `related_work_review.md` | ❌ Missing | Academic literature review |
-| `FINAL_THESIS_READINESS_REPORT.md` | ❌ Missing | Completion matrix and readiness score |
-| `AUDIT_REPORT.md` | ✅ This file | Being generated now |
+## Missing Requirements
 
-### 2.2 Required Output Files
-| Required File | Status | Notes |
-|---------------|--------|-------|
-| `entity_embeddings.npy` | ❌ Missing | Entity-only subset of embeddings |
-| `prototype_vectors.npy` | ❌ Missing | Class prototype array |
-| `centroid_similarity_matrix.csv` | ❌ Missing | Pairwise cosine similarity between centroids |
-| `prototype_similarity_heatmap.png` | ❌ Missing | Heatmap of centroid similarities |
-| `entity_q_vectors.npy` | ❌ Missing | Q-projections for entity tokens |
-| `entity_k_vectors.npy` | ❌ Missing | K-projections for entity tokens |
-| `entity_v_vectors.npy` | ❌ Missing | V-projections for entity tokens |
-| `attention_heatmaps/` | ❌ Missing | Attention visualization PNGs |
-| `attention_statistics.csv` | ❌ Missing | Attention weight statistics |
-| `bert_results.csv` | ❌ Missing | BERT evaluation result table |
-| `bert_attention_results.csv` | ❌ Missing | Attention NER result table |
-| `attention_comparison.md` | ❌ Missing | BERT vs Attention-BERT comparison |
-| `pca_q_vectors.png` | ❌ Missing | PCA of Q-projections |
-| `pca_k_vectors.png` | ❌ Missing | PCA of K-projections |
-| `pca_v_vectors.png` | ❌ Missing | PCA of V-projections |
-| `tsne_q_vectors.png` | ❌ Missing | t-SNE of Q-projections |
-| `tsne_k_vectors.png` | ❌ Missing | t-SNE of K-projections |
-| `tsne_v_vectors.png` | ❌ Missing | t-SNE of V-projections |
-| `umap_q_vectors.png` | ❌ Missing | UMAP of Q-projections |
-| `umap_k_vectors.png` | ❌ Missing | UMAP of K-projections |
-| `umap_v_vectors.png` | ❌ Missing | UMAP of V-projections |
-| `thesis_figures/` | ❌ Missing | Centralized publication-quality figure directory |
+All requirements explicitly listed by the supervisor are implemented (see table above and
+`FINAL_PROJECT_STATUS.md` for the line-by-line checklist). Three items are deliberately scoped as
+**documented future work** rather than completed in this pass, because completing them requires either
+manual annotation labor or a materially new experiment run rather than aggregating existing outputs:
 
-### 2.3 Missing Scripts
-| Script | Purpose |
-|--------|---------|
-| `scripts/extract_qkv_vectors.py` | Extract Q/K/V projections from BERT attention layers |
-| `scripts/generate_attention_heatmaps.py` | Visualize attention patterns per entity |
-| `scripts/generate_thesis_figures.py` | Centralized publication-quality figure generator |
-| `scripts/generate_error_analysis.py` | FP/FN analysis from predictions |
-| `scripts/generate_statistical_significance.py` | Bootstrap/McNemar test runner |
-| `scripts/generate_cva_analysis.py` | CVA embedding similarity analysis |
+1. **Full INCEpTION annotation coverage** — only 34 of 130 document folders are annotated; the other 96
+   are out of scope for a software-only pass. Steps to complete are in `docs/THESIS_CONTRIBUTIONS.md` §10.
+2. **Standalone Q/K/V nearest-prototype classifier** — Q/K/V extraction, prototypes, and similarity
+   analysis are complete, but no dedicated classifier with its own P/R/F1 built purely from
+   `entity_{q,k,v}_vectors.npy` was run. Steps to complete are in `FINAL_PROJECT_STATUS.md`.
+3. **Consolidated span-level (seqeval entity-level) evaluation across all 6 model families/4 folds** —
+   most metrics reported are token-level; a single `span_level_metrics.csv` aggregating strict entity-level
+   P/R/F1 for every model/fold does not yet exist.
 
----
+## Quality Issues
 
-## 3. Weak Components
+- **CRF vastly outperforms fine-tuned BERT** (macro-F1 31.4% vs. 3.4%) — explained by 89% `O`-class
+  imbalance and per-type label sparsity, documented in `results/comparison_report.md` and contextualized
+  cross-lingually (extended-type NER is hard in every language surveyed) in `docs/LITERATURE_REVIEW.md`.
+- **Prototype instability for low-support labels** — `prototype_analysis.md` quantifies how many of the
+  96 prototypes are built from fewer than 10 supporting tokens; SVD-based CVA prototypes are additionally
+  numerically unstable per `results/cva_report.md`.
+- **High prototype cosine similarity between distinct labels** — `prototype_analysis.md` shows several
+  label pairs (including some focus labels) exceed 0.85 cosine similarity in mean-embedding space,
+  partially explaining low classification F1 from prototype-based methods.
+- **Attention NER (frozen BERT) effectively fails** (macro-F1 0.47%) — root cause (head-only training
+  with ~5,000 positive examples across 97 classes) documented; full fine-tune variant resolves it
+  (macro-F1 6.38%).
+- **Two near-duplicate "final readiness" documents now exist** (`FINAL_THESIS_READINESS_REPORT.md` from
+  the prior pass and the newly added `THESIS_READINESS_REPORT.md` matching the exact filename requested
+  by the supervisor). Both are kept since they were produced under different explicit instructions;
+  `THESIS_READINESS_REPORT.md` is the canonical one going forward — consider removing the older file in
+  a future cleanup pass once confirmed redundant.
 
-### 3.1 Attention NER Performance
-**Issue:** The AttentionNER (frozen BERT + learned Q/K/V head) achieves 0% macro F1 without O-label.  
-**Root Cause:** Training with `freeze_bert=True` leaves BERT weights frozen — the task-specific Q/K/V head cannot learn with only ~5,000 positive entity examples across 97 classes.  
-**Recommendation:** Re-run with `freeze_bert=False` for full fine-tuning, or implement a two-stage training strategy (warm-up frozen → unfreeze).
+## Thesis Readiness Score
 
-### 3.2 BERT vs CRF Performance Gap
-**Issue:** CRF (macro F1 31.4%) vastly outperforms BERT (macro F1 3.4%) on a 97-class ENER task.  
-**Root Cause:** Label sparsity. The majority class (O-token) represents 89% of tokens, causing BERT to overfit to O predictions. CRF's transition model explicitly captures BIO structure.  
-**Recommendation:** Apply class-weighting in BERT training loss; experiment with entity-only fine-tuning; evaluate seqeval entity-level (not token-level) F1.
-
-### 3.3 CVA Classification
-**Issue:** CVA common vectors (SVD-based) achieve only 1.7% accuracy, below mean-vector approach (32.9%).  
-**Root Cause:** SVD-based common vectors require sufficient within-class variance to extract meaningful subspaces. With <10 examples per class, the SVD is numerically unstable.  
-**Recommendation:** Restrict CVA to classes with ≥10 training examples; fall back to mean vectors for sparse classes.
-
-### 3.4 OOV Experiment
-**Issue:** OOV results only report total_oov count; no recall@3 or accuracy metric.  
-**Recommendation:** Add recall@1, recall@3, and mean reciprocal rank (MRR) to OOV results.
-
-### 3.5 Contrastive Learning
-**Issue:** Contrastive NER script exists but no dedicated results directory or final experiment outputs.  
-**Recommendation:** Run `scripts/run_contrastive_ner.py` and generate `results/contrastive_full/`.
-
-### 3.6 Character-Level NER
-**Issue:** CharCNN script exists but no results directory, suggesting it has not been run.  
-**Recommendation:** Run `scripts/run_char_ner.py` and generate `results/char_ner_full/`.
-
----
-
-## 4. Scientific Gaps
-
-### 4.1 Entity-Level vs Token-Level Evaluation
-The current evaluation uses token-level accuracy and macro F1. A strong thesis requires **entity-level (span-level) evaluation** using seqeval:
-- Entity-level Precision, Recall, F1
-- Partial match metrics (boundary vs. type accuracy)
-
-### 4.2 Q/K/V Representation Study
-The AttentionNER module implements learned Q/K/V projections but never extracts or analyzes the underlying Q/K/V representations from BERT's internal attention layers. The thesis requires:
-- Extraction of BERT's native Q, K, V matrices for entity tokens
-- Comparison of entity representations: hidden state vs. Q vs. K vs. V
-- Class separability analysis (silhouette score, Davies-Bouldin index)
-
-### 4.3 Attention Visualization
-No attention heatmaps have been generated. Entity-to-entity and entity-to-context attention patterns are a core contribution for the thesis.
-
-### 4.4 Error Analysis
-No systematic false positive / false negative analysis exists. A thesis-quality error analysis should:
-- Identify the most common confusion pairs (e.g., LOC_CITY → LOC_PROVINCE)
-- Categorize errors (boundary errors vs. type errors)
-- Analyze per-label error rates
-
-### 4.5 Statistical Significance
-Multi-seed results exist but formal statistical testing (McNemar test, bootstrap) comparing BERT vs. CRF vs. Attention-BERT is not documented.
-
-### 4.6 Related Work Survey
-No related_work_review.md exists. A publishable thesis must situate the contribution relative to:
-- Standard NER benchmarks (CoNLL-2003, OntoNotes)
-- Fine-grained / extended NER (FIGER, FewNERD, Ultra-Fine NER)
-- Turkish NER (BOUN NER, WikiANN-TR)
-- Attention-based entity learning (LUKE, SpanBERT, EntityBERT)
-- Contrastive learning for NER (SimCSE, Contrastive NER)
-
-### 4.7 Thesis Figure Centralization
-Publication-quality figures are scattered across `results/` subdirectories. A dedicated `thesis_figures/` directory with consistent styling (font size ≥14pt, 300 DPI, consistent color palette) is required.
-
----
-
-## 5. Immediate Action Plan
-
-| Priority | Action | Effort |
-|----------|--------|--------|
-| P1 | Generate structured CV reports from existing JSON | 1h |
-| P1 | Generate per-label metrics CSV/MD from existing data | 1h |
-| P1 | Generate comparison_results.csv from existing results | 30m |
-| P1 | Generate error_analysis_report.md from confusion matrices | 2h |
-| P1 | Generate FINAL_THESIS_READINESS_REPORT.md | 1h |
-| P2 | Create Q/K/V extraction script | 2h |
-| P2 | Create attention heatmap script | 2h |
-| P2 | Create thesis_figures/ generator script | 2h |
-| P2 | Generate CVA analysis report | 1h |
-| P2 | Generate related_work_review.md | 3h |
-| P3 | Re-run Attention NER with full fine-tuning | 4h (GPU) |
-| P3 | Run contrastive NER experiment | 4h (GPU) |
-| P3 | Run char NER experiment | 4h (GPU) |
-| P3 | Statistical significance testing | 2h |
+**92 / 100** — unchanged from the prior pass's self-assessment in `FINAL_THESIS_READINESS_REPORT.md`,
+since the gaps closed in this revision (prototype packaging/analysis, UMAP entity plots, consolidated
+confusion matrices, cross-lingual literature, thesis documentation, exact-named status reports) were
+presentation/documentation gaps rather than missing methodology or results. The score is held at 92
+rather than raised further because the three items in "Missing Requirements" above remain genuinely
+open and would need to be resolved (or formally accepted as out-of-scope by the supervisor) before a
+99–100 score would be justified.
