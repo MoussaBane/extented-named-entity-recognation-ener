@@ -15,7 +15,7 @@ prototype vectors, cross-validation, results, limitations, and future work.
 - **Size:** 1,142 annotated sentences, 29,195 tokens, 85.8% of sentences contain at least one entity.
 - **Smoke-test subset:** `data/_smoke_train.conll`, `data/_smoke_eval.conll` for fast pipeline checks
   without GPU time.
-- **Original annotation source:** `data/annotation/` — 130 INCEpTION document folders, of which 34 are
+- **Original annotation source:** `data/annotation/`  130 INCEpTION document folders, of which 34 are
   fully annotated and converted into the final CoNLL files; the remaining folders are tracked as a
   documented limitation (see Section 10).
 
@@ -45,7 +45,7 @@ prototype vectors, cross-validation, results, limitations, and future work.
   (`PRO_AWARD`, `PRO_CLASS`, `PRO_CULTURE`, `PRO_LANGUAGE`, `PRO_LAW`, `PRO_RULE`, `PRO_SERVICE`,
   `PRO_STYLE`, `PRO_THEORY`, and 10+ more) categories, among others.
 - This is 19 more fine-grained types than FIGER (112) and a comparable order of magnitude to FewNERD's
-  66 fine-grained types — see `docs/LITERATURE_REVIEW.md` Part I and the cross-lingual synthesis table
+  66 fine-grained types  see `docs/LITERATURE_REVIEW.md` Part I and the cross-lingual synthesis table
   for how this scheme compares internationally.
 
 ## 4. Model Architecture
@@ -73,11 +73,11 @@ Text → Tokenizer → BERT Encoder → Hidden States → Attention Layer (learn
 - Implemented per Vaswani et al. (2017): for hidden states `X` of an entity span,
   `Q = XW_Q`, `K = XW_K`, `V = XW_V`, `Attention(Q,K,V) = softmax(QK^T / sqrt(d_k)) V`.
 - Two complementary attention analyses exist:
-  1. **`ner_stats/attention_ner.py`** — a *learned, trainable* Q/K/V head (`nn.Linear(d_model, d_head,
+  1. **`ner_stats/attention_ner.py`**  a *learned, trainable* Q/K/V head (`nn.Linear(d_model, d_head,
      bias=False)` for each of `W_Q`, `W_K`, `W_V`) stacked on top of BERT, trained end-to-end as part of
      the AttentionNER model family (`results/attention_ner_full_finetune/`, macro-F1 6.38%, the best
      neural model in the comparison).
-  2. **`scripts/extract_qkv_vectors.py`** — extracts BERT's *own internal* Q/K/V projections (layer 11)
+  2. **`scripts/extract_qkv_vectors.py`**  extracts BERT's *own internal* Q/K/V projections (layer 11)
      for every entity token, without any additional training, to test whether off-the-shelf BERT
      attention already encodes entity-discriminative structure (`results/qkv_analysis/`).
 - Attention heatmaps (`scripts/generate_attention_heatmaps.py`, `results/attention_heatmaps/`) visualize
@@ -106,7 +106,7 @@ Text → Tokenizer → BERT Encoder → Hidden States → Attention Layer (learn
 - Cosine-similarity evaluation across all prototype pairs, with a focused comparison of the
   supervisor-requested labels (PERSON, ORG, DATE, EVENT, DISEASE, LOC_CITY, LOC_COUNTRY), is in
   `prototype_analysis.md`. Key finding: many prototype pairs exceed 0.85 cosine similarity, indicating
-  that mean-embedding prototypes under-discriminate several label pairs — a likely contributor to the
+  that mean-embedding prototypes under-discriminate several label pairs  a likely contributor to the
   CVA mean-vector classifier's relatively low (32.9%) but still BERT-fine-tuning-beating accuracy.
 - A pairwise prototype similarity heatmap is in `thesis_figures/10_prototype_similarity.png` (full
   label set) and `thesis_figures/17_prototype_similarity_heatmap.png` (Q/K/V-derived, 51 classes).
@@ -125,9 +125,9 @@ Text → Tokenizer → BERT Encoder → Hidden States → Attention Layer (learn
 
 | Model | Accuracy | Macro F1 | Evaluation level |
 |---|---|---|---|
-| CRF (4-fold) | 0.6868 ± 0.0257 | **0.3138 ± 0.0244** | Entity-level (excl. `O`) — best overall |
+| CRF (4-fold) | 0.6868 ± 0.0257 | **0.3138 ± 0.0244** | Entity-level (excl. `O`)  best overall |
 | Context-only (mean cosine prototype) | 0.3294 | 0.0931 | All tokens |
-| Attention NER (full fine-tune) | 0.7444 | 0.0638 | Entity-level (excl. `O`) — best neural model |
+| Attention NER (full fine-tune) | 0.7444 | 0.0638 | Entity-level (excl. `O`)  best neural model |
 | BERT fine-tuned | 0.7824 ± 0.0074 | 0.0340 ± 0.0121 | Token-level (incl. `O`) |
 | CharBERT (BERT + CharCNN) | 0.5200 | 0.0319 | All tokens |
 | Contrastive NER (SupConLoss) | 0.5085 | 0.0316 | All tokens |
@@ -141,12 +141,12 @@ BERT): `results/statistical_significance_report.md`.
 **Counter-intuitive finding:** the CRF baseline and even the unsupervised mean-vector prototype
 classifier outperform fully fine-tuned BERT by a wide margin on macro-F1, despite BERT's higher raw
 token accuracy. This is explained by class imbalance (the majority `O` class is ~89% of tokens) and
-label sparsity (many of the 97 types have <10 training examples) — see Section 10.
+label sparsity (many of the 97 types have <10 training examples)  see Section 10.
 
 ## 10. Limitations
 
 - **Corpus size vs. taxonomy size:** 1,142 sentences across 97 observed entity types means most types
-  have fewer than 10 training examples — insufficient for stable gradient-based fine-tuning of rare
+  have fewer than 10 training examples  insufficient for stable gradient-based fine-tuning of rare
   classes, and numerically unstable for SVD-based CVA prototypes (see `results/cva_report.md`).
 - **Annotation coverage:** only 34 of 130 INCEpTION document folders are fully annotated; the remaining
   96 folders are not converted to CoNLL and are excluded from all experiments. Completing this would
