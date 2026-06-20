@@ -246,12 +246,12 @@ contribution of this thesis: extended/fine-grained type inventories are dramatic
 
 | Language | Flat-scheme NER F1 (3–4 classes) | Source | This thesis's extended-scheme F1 (97–131 classes) |
 |---|---|---|---|
-| English | 91–92% (OntoNotes, BERT-large) | Weischedel et al. 2013 | — (not run in this thesis; FewNERD reports 40–92% across shot settings) |
+| English | 91–92% (OntoNotes, BERT-large) | Weischedel et al. 2013 | (not run in this thesis; FewNERD reports 40–92% across shot settings) |
 | Turkish | ~91% (HMM, 3-class) | Tür et al. 2003 | **31.4% (CRF)**, 3.4–6.4% (BERT/Attention-NER) |
-| German | 76.4–88.3% (CRF/GELECTRA) | Benikova et al. 2014; Chan et al. 2020 | — |
-| French | 85–90% (CRF/CamemBERT) | Nothman et al. 2013; Martin et al. 2020 | — |
-| Arabic | 83.3–84.2% (MaxEnt/AraBERT) | Benajiba et al. 2007; Antoun et al. 2020 | — |
-| Chinese | 93.2–95% (Lattice-LSTM/BERT) | Zhang & Yang 2018; Levow 2006 | — |
+| German | 76.4–88.3% (CRF/GELECTRA) | Benikova et al. 2014; Chan et al. 2020 | - |
+| French | 85–90% (CRF/CamemBERT) | Nothman et al. 2013; Martin et al. 2020 | - |
+| Arabic | 83.3–84.2% (MaxEnt/AraBERT) | Benajiba et al. 2007; Antoun et al. 2020 | - |
+| Chinese | 93.2–95% (Lattice-LSTM/BERT) | Zhang & Yang 2018; Levow 2006 | - |
 
 **Synthesis:** Across all six languages, flat 3–4-class NER with modern transformer backbones reaches
 76–95% F1. This thesis's Turkish Extended NER task (97–131 fine-grained types, 1,142 annotated
