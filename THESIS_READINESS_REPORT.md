@@ -24,7 +24,7 @@ substance this report consolidates and brings up to date with the gap-filling wo
 - **Per-label metrics** for all 97 observed entity types (`results/label_metrics.{csv,md}`).
 - **Entity embeddings** extracted and visualized (PCA, t-SNE, and now UMAP) for both the full
   embedding space and the entity-only Q/K/V/hidden-state subspaces.
-- **Prototype vectors** — mean-embedding prototypes for 96 labels, packaged as `prototype_vectors.pkl`,
+- **Prototype vectors** - mean-embedding prototypes for 96 labels, packaged as `prototype_vectors.pkl`,
   with a dedicated cosine-similarity evaluation in `prototype_analysis.md` focused on the
   supervisor-named labels (PERSON, ORG, DATE, EVENT, DISEASE, LOC_CITY, LOC_COUNTRY).
 - **Attention-based entity representation:** both a trainable Q/K/V head (`AttentionNER`) and
@@ -46,7 +46,7 @@ substance this report consolidates and brings up to date with the gap-filling wo
 | Item | Status | Detail |
 |---|---|---|
 | Full corpus annotation | Partial (34/130 folders) | Documented in `docs/THESIS_CONTRIBUTIONS.md` §10 and `FINAL_PROJECT_STATUS.md`; requires manual annotation labor, not a software gap |
-| Q/K/V used as a standalone classifier | Analysis-only | Extraction, prototypes, and similarity analysis exist; a dedicated nearest-Q/K/V-prototype classifier with its own P/R/F1 was not run this pass — see exact steps in `FINAL_PROJECT_STATUS.md` |
+| Q/K/V used as a standalone classifier | Analysis-only | Extraction, prototypes, and similarity analysis exist; a dedicated nearest-Q/K/V-prototype classifier with its own P/R/F1 was not run this pass - see exact steps in `FINAL_PROJECT_STATUS.md` |
 | Span-level (entity-level, seqeval) evaluation | Partial | Most reported metrics are token-level; entity-level boundary+type strict evaluation across all 6 model families/4 folds is not yet a single consolidated table |
 | McNemar's test | Not done | Bootstrap CI + Wilcoxon were judged sufficient (per `FINAL_THESIS_READINESS_REPORT.md` §6); McNemar requires per-token paired predictions aligned across models, which was not assembled |
 
@@ -61,14 +61,14 @@ substance this report consolidates and brings up to date with the gap-filling wo
 
 ## Recommended Thesis Chapters
 
-1. **Introduction** — motivation for extended/fine-grained NER, research questions (README.md, "Research Questions").
-2. **Related Work** — `docs/LITERATURE_REVIEW.md` (English, Turkish, German, French, Arabic, Chinese) + `related_work_review.md` (attention/contrastive learning theory).
-3. **Dataset & Annotation** — `docs/THESIS_CONTRIBUTIONS.md` §1–3.
-4. **Methodology / Architecture** — `docs/THESIS_CONTRIBUTIONS.md` §4–7 (models, attention mechanism, entity embeddings, prototypes).
-5. **Experimental Setup** — 4-fold CV protocol, `docs/THESIS_CONTRIBUTIONS.md` §8.
-6. **Results** — `docs/THESIS_CONTRIBUTIONS.md` §9, `results/comparison_report.md`, `results/label_metrics.md`, `prototype_analysis.md`, `results/confusion_matrices/README.md`.
-7. **Discussion / Error Analysis** — `results/error_analysis_report.md`, `results/statistical_significance_report.md`.
-8. **Limitations & Future Work** — `docs/THESIS_CONTRIBUTIONS.md` §10–11.
+1. **Introduction** - motivation for extended/fine-grained NER, research questions (README.md, "Research Questions").
+2. **Related Work** - `docs/LITERATURE_REVIEW.md` (English, Turkish, German, French, Arabic, Chinese) + `related_work_review.md` (attention/contrastive learning theory).
+3. **Dataset & Annotation** - `docs/THESIS_CONTRIBUTIONS.md` §1–3.
+4. **Methodology / Architecture** - `docs/THESIS_CONTRIBUTIONS.md` §4–7 (models, attention mechanism, entity embeddings, prototypes).
+5. **Experimental Setup** - 4-fold CV protocol, `docs/THESIS_CONTRIBUTIONS.md` §8.
+6. **Results** - `docs/THESIS_CONTRIBUTIONS.md` §9, `results/comparison_report.md`, `results/label_metrics.md`, `prototype_analysis.md`, `results/confusion_matrices/README.md`.
+7. **Discussion / Error Analysis** - `results/error_analysis_report.md`, `results/statistical_significance_report.md`.
+8. **Limitations & Future Work** - `docs/THESIS_CONTRIBUTIONS.md` §10–11.
 9. **Conclusion**.
 
 ## Publication Opportunities
@@ -93,6 +93,6 @@ substance this report consolidates and brings up to date with the gap-filling wo
 The repository is thesis-ready. All supervisor requirements are either fully implemented with concrete
 evidence (see `FINAL_PROJECT_STATUS.md`) or explicitly documented as a scoped, resumable future-work
 item with the exact steps required to complete them. The remaining gaps (full annotation coverage,
-standalone Q/K/V classifier, full span-level evaluation, McNemar's test) are genuine scope boundaries —
+standalone Q/K/V classifier, full span-level evaluation, McNemar's test) are genuine scope boundaries -
 mostly requiring either additional manual annotation labor or additional experiment runs beyond what
-existing code already produces — not missing functionality in the codebase itself.
+existing code already produces - not missing functionality in the codebase itself.
